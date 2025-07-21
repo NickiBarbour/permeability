@@ -137,7 +137,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               layer_spatial(data = bm) +
               guides(fill = "none") +
               geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
-                      linewidth = 2) +
+                      linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -173,7 +173,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               layer_spatial(data = bm) +
               guides(fill = "none") +
               geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
-                      linewidth = 2) +
+                      linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -203,7 +203,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           }
           map <- ggplot() +
             geom_sf(data = barrier_segment, aes(color = kappa.hat), 
-                    linewidth = 2) +
+                    linewidth = 1.5) +
             scale_color_viridis_c(option = "B", breaks = breaks,
                                   labels = breaks_labels,
                                   name = expression(hat(kappa))) +
@@ -250,9 +250,9 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
             map <- ggplot() +
               layer_spatial(data = bm) +
               guides(fill = "none") +
-              geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
+              geom_sf(data = tracks, color = "grey", linewidth = 0.7) +
               geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
-                      linewidth = 2) +
+                      linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -287,9 +287,9 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
             map <- ggplot() +
               layer_spatial(data = bm) +
               guides(fill = "none") +
-              geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
+              geom_sf(data = tracks, color = "grey", linewidth = 0.7) +
               geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
-                      linewidth = 2) +
+                      linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -325,7 +325,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           map <- ggplot() +
             geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
             geom_sf(data = barrier_segment, aes(color = kappa.hat), 
-                    linewidth = 2) +
+                    linewidth = 1.5) +
             scale_color_viridis_c(option = "B", breaks = breaks,
                                   labels = breaks_labels,
                                   name = expression(hat(kappa))) +
