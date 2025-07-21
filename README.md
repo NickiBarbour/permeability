@@ -10,12 +10,13 @@ Additional functions can be used to a) estimate permeability of the barrier as a
 
 The vignette demonstrates use of package functions with both simulated and “real” animal movement data.
 
-To install the package:
+To install and load the package and vignette:
 
 ```
 library(devtools)
-install_github("https://github.com/barb3800/permeability", vignettes = TRUE)
+install_github("https://github.com/barb3800/permeability", build_vignettes = TRUE)
 library(permeability)
+browseVignettes("permeability")
 ```
 
 Report any issues or bugs to the package developers:
