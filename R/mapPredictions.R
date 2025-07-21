@@ -227,9 +227,11 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                 st_transform(4326) |>
                 st_bbox()
             }
-            bm <- suppressWarnings(basemaps::basemap_raster(
-              box, map_service = map.service, map_type = map.type,
-              map_res = map.res))
+            bm <- suppressWarnings(basemaps::basemap_raster(box, 
+                                                            map_service = 
+                                                              map.service, 
+                                                            map_type = map.type,
+                                                            map_res = map.res))
             box <- box |>
               st_as_sfc() |> 
               st_transform(crs = st_crs(bm)) |>
@@ -243,7 +245,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                                          dplyr::group_by(ID) |>
                                          dplyr::summarize(do_union=FALSE) |>
                                          sf::st_cast("LINESTRING") |> 
-                                         st_transform(4326) |>
+                                         st_transform(st_crs(bm)) |>
                                          sf::st_crop(box))
             map <- ggplot() +
               layer_spatial(data = bm) +
@@ -280,7 +282,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                                          dplyr::group_by(ID) |>
                                          dplyr::summarize(do_union=FALSE) |>
                                          sf::st_cast("LINESTRING") |> 
-                                         st_transform(4326) |>
+                                         st_transform(st_crs(bm)) |>
                                          sf::st_crop(box))
             map <- ggplot() +
               layer_spatial(data = bm) +
@@ -301,6 +303,16 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           }
           return(map)
         }else{
+          if(is.null(box)){
+            box <- barrier.sf |>
+              st_transform(4326) |>
+              st_bbox()
+          }else{
+            box <- box |>
+              st_as_sfc() |> 
+              st_transform(crs = 4326) |>
+              st_bbox()
+          }
           if(log_kappa){
             barrier_segment$kappa.hat <- log10(barrier_segment$kappa.hat)
           }
