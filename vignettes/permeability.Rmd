@@ -1074,7 +1074,9 @@ This function takes a dataframe of predictions, including a `barrier.id` value f
 
 The function can also handle multiple linear features; for example, if you had three highways of interest occurring in the same spatial area, you could bind them together into one large `sf` object, including a column `Feature.ID` to distinguish them. The `predictions` dataframe should also have a column called `Feature.ID`, to map individual linear feature predictions to their own geometry.
 
-Finally, this function has options for creating a static map without a basemap (default), with a basemap (using `ggspatial` if `maptype` is specified or `basemaps` with an ESRI landscape map, by default), or to create an interactive map (with `mapview` and `interactive = TRUE`). Users can optionally add an `sf` POINT object of their movement data to map movement tracks with the barrier(s) (using the `tracks.sf` argument) or even add their own basemap (provided to the `basemap` argument).
+This function additionally has options for creating 1) a static map without a basemap (default); 2) a static map *with* a basemap (using `basemaps` with an ESRI landscape map, by default - or users can select their own map service provider, map type, or map resolution, with `map.service`, `map.type`, or `map.res` - see Help file for more details); or 3) create an interactive map (with `mapview` and `interactive = TRUE`). 
+
+Users can optionally add an `sf` POINT object of their movement data to map movement tracks with the barrier(s) (using the `tracks.sf` argument) or even add their own basemap (provided to the `basemap` argument). Other optional features include providing your plotting `breaks` for $\kappa$ values and changing the map extent with `box`.
 
 Here, we show an example predicting $\kappa$ values as a function of `km` along the highway, using the fitted `spline_km_model` from above. First, a `predictions` dataframe is created, storing `km` and corresponding `barrier.id` values for each barrier segment.
 

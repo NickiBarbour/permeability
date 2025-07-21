@@ -26,10 +26,8 @@
 #' use a log scale to break up data and plot it. Applicable for static maps
 #' only.
 #' @param add.basemap if TRUE (default FALSE), will add a basemap for a
-#' static map, using either the `ggspatial` package (if `maptype` is
-#' specified, with types available in `rosm::osm.types`) or by default, a
-#' an ESRI landscape map from the `basemaps` package. 
-#' Alternatively you can provde your own basemap (as a raster) with the 
+#' static map, using an ESRI landscape map from the `basemaps` package. 
+#' Alternatively you can provide your own basemap (as a raster) with the 
 #' `basemap` argument.
 #' @param basemap default NULL but you can prove your own basemap for plotting
 #' here. Should be a raster with similar spatial extent and CRS as your
@@ -57,7 +55,7 @@
 
 mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                            tracks.sf = NULL, breaks = NULL,
-                           add.basemap = FALSE, maptype = NULL, basemap = NULL,
+                           add.basemap = FALSE, basemap = NULL,
                            box = NULL, map.service = "esri", 
                            map.type = "world_imagery", map.res = NULL){
   if(! "barrier.id" %in% colnames(predictions)) 
@@ -97,10 +95,10 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
         st_transform(4326)
       barrier_segment$kappa.hat <- signif(barrier_segment$kappa.hat,
                                           digits = 1)
-      if(0 %in% unique(barrier_segment$kappa.hat)){
-        barrier_segment[which(barrier_segment$kappa.hat==0),]$kappa.hat <- 1e-4
-      }
       if(is.null(breaks)){
+        if(0 %in% unique(barrier_segment$kappa.hat)){
+          barrier_segment[which(barrier_segment$kappa.hat==0),]$kappa.hat <- 1e-4
+        }
         breaks <- pretty(log10(barrier_segment$kappa.hat))
         breaks_labels <- signif(10^breaks, 1)
         log_kappa <- TRUE
@@ -111,7 +109,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
       }
       if(is.null(tracks.sf)){
         if(add.basemap){
-          if(is.null(maptype) & is.null(basemap)){
+          if(is.null(basemap)){
             if(is.null(box)){
               box <- barrier.sf |>
                 st_bbox()
@@ -132,7 +130,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
             if(log_kappa){
-              barrier_segment2$kappa.hat <- log10(kappa.hat)
+              barrier_segment2$kappa.hat <- log10(barrier_segment2$kappa.hat)
             }
             
             map <- ggplot() +
@@ -149,35 +147,6 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                                      pad_y = unit(1,"cm")) +
               xlab("Longitude") + ylab("Latitude")+
               coord_sf(expand=FALSE)+
-              theme_classic() + theme(text = element_text(size = 11))
-          }else if(!is.null(maptype) & is.null(basemap)){
-            if(is.null(box)){
-              box <- barrier.sf |>
-                st_transform(4326) |>
-                st_bbox()
-            }else{
-              box <- box |>
-                st_as_sfc() |> 
-                st_transform(crs = 4326) |>
-                st_bbox()
-            }
-            if(log_kappa){
-              barrier_segment$kappa.hat <- log10(kappa.hat)
-            }
-            map <- ggplot() +
-              annotation_map_tile(zoomin = -1, 
-                                  type = maptype) +
-              geom_sf(data = barrier_segment, aes(color = kappa.hat), 
-                      linewidth = 2) +
-              scale_color_viridis_c(option = "B", breaks = breaks,
-                                    labels = breaks_labels,
-                                    name = expression(hat(kappa))) +
-              annotation_scale() +
-              annotation_north_arrow(height = unit(0.5,"cm"), 
-                                     width = unit(0.5,"cm"), 
-                                     pad_y = unit(1,"cm")) +
-              xlab("Longitude") + ylab("Latitude")+
-              shadow_spatial(box) +
               theme_classic() + theme(text = element_text(size = 11))
           }else if(!is.null(basemap)){
             bm <- basemap
@@ -197,7 +166,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
             if(log_kappa){
-              barrier_segment2$kappa.hat <- log10(kappa.hat)
+              barrier_segment2$kappa.hat <- log10(barrier_segment2$kappa.hat)
             }
             
             map <- ggplot() +
@@ -230,7 +199,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               st_bbox()
           }
           if(log_kappa){
-            barrier_segment$kappa.hat <- log10(kappa.hat)
+            barrier_segment$kappa.hat <- log10(barrier_segment$kappa.hat)
           }
           map <- ggplot() +
             geom_sf(data = barrier_segment, aes(color = kappa.hat), 
@@ -249,7 +218,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
         }
       }else{
         if(add.basemap){
-          if(is.null(maptype) & is.null(basemap)){
+          if(is.null(basemap)){
             if(is.null(box)){
               box <- barrier.sf |>
                 st_bbox()
@@ -268,7 +237,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
             if(log_kappa){
-              barrier_segment2$kappa.hat <- log10(kappa.hat)
+              barrier_segment2$kappa.hat <- log10(barrier_segment2$kappa.hat)
             }
             tracks <- suppressWarnings(tracks.sf |> 
                                          dplyr::group_by(ID) |>
@@ -292,42 +261,6 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               xlab("Longitude") + ylab("Latitude")+
               coord_sf(expand=FALSE)+
               theme_classic() + theme(text = element_text(size = 11))
-          }else if(!is.null(maptype) & is.null(basemap)){
-            if(is.null(box)){
-              box <- barrier.sf |>
-                st_transform(4326) |>
-                st_bbox()
-            }else{
-              box <- box |>
-                st_as_sfc() |> 
-                st_transform(crs = 4326) |>
-                st_bbox()
-            }
-            if(log_kappa){
-              barrier_segment$kappa.hat <- log10(kappa.hat)
-            }
-            tracks <- suppressWarnings(tracks.sf |> 
-                                         dplyr::group_by(ID) |>
-                                         dplyr::summarize(do_union=FALSE) |>
-                                         sf::st_cast("LINESTRING") |> 
-                                         st_transform(4326) |>
-                                         sf::st_crop(box))
-            map <- ggplot() +
-              annotation_map_tile(zoomin = -1, 
-                                  type = maptype) +
-              geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
-              geom_sf(data = barrier_segment, aes(color = kappa.hat), 
-                      linewidth = 2) +
-              scale_color_viridis_c(option = "B", breaks = breaks,
-                                    labels = breaks_labels,
-                                    name = expression(hat(kappa))) +
-              annotation_scale() +
-              annotation_north_arrow(height = unit(0.5,"cm"), 
-                                     width = unit(0.5,"cm"), 
-                                     pad_y = unit(1,"cm")) +
-              xlab("Longitude") + ylab("Latitude")+
-              shadow_spatial(box) +
-              theme_classic() + theme(text = element_text(size = 11))
           }else if(!is.null(basemap)){
             bm <- basemap
             if(is.null(box)){
@@ -341,7 +274,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
             if(log_kappa){
-              barrier_segment2$kappa.hat <- log10(kappa.hat)
+              barrier_segment2$kappa.hat <- log10(barrier_segment2$kappa.hat)
             }
             tracks <- suppressWarnings(tracks.sf |> 
                                          dplyr::group_by(ID) |>
@@ -369,7 +302,7 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           return(map)
         }else{
           if(log_kappa){
-            barrier_segment$kappa.hat <- log10(kappa.hat)
+            barrier_segment$kappa.hat <- log10(barrier_segment$kappa.hat)
           }
           tracks <- suppressWarnings(tracks.sf |> 
                                        dplyr::group_by(ID) |>

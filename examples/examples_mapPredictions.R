@@ -46,11 +46,6 @@ map <- mapPredictions(predictions, barrier.sf = hwy1_west,
                       add.basemap = TRUE)
 map
 
-## OSM streep map with ggspatial package
-map <- mapPredictions(predictions, barrier.sf = hwy1_west, 
-                      add.basemap = TRUE, maptype = "osm")
-map
-
 # interactive map ------------------------------------------------------
 mapPredictions(predictions, barrier.sf = hwy1_west,
                interactive = TRUE)
