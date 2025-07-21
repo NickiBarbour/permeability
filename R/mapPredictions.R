@@ -22,7 +22,9 @@
 #' with a columns for `ID`. Will be used to map animal tracks behind the
 #' barrier and should have a matching CRS to the `barrier.sf` object.
 #' @param breaks Default NULL but if specified, should be a vector of values
-#' to break up the predicted kappa values in the plot legend.
+#' to break up the predicted kappa values in the plot legend. If NULL, will
+#' use a log scale to break up data and plot it. Applicable for static maps
+#' only.
 #' @param add.basemap if TRUE (default FALSE), will add a basemap for a
 #' static map, using either the `ggspatial` package (if `maptype` is
 #' specified, with types available in `rosm::osm.types`) or by default, a
@@ -31,7 +33,23 @@
 #' `basemap` argument.
 #' @param basemap default NULL but you can prove your own basemap for plotting
 #' here. Should be a raster with similar spatial extent and CRS as your
-#' `barrier.sf` object.
+#' `barrier.sf` object. Applicable for static maps only. 
+#' @param box default NULL but you can provide a different spatial extent for
+#' the map using this box parameter, which should be an sf bbox object with a
+#' CRS matching the barrier sf object. If NULL, will use the spatial extent of 
+#' the provided barrier object to create map. Applicable to static maps only. 
+#' @param map.service for static maps with an automatic basemap (provided 
+#' through the "basemaps" package), the map service to use - default is "esri"
+#' but you can also use other options available through the "basemap_raster"
+#' function from basemaps (e.g., "osm").
+#' @param map.type for static maps with an automatic basemap (provided 
+#' through the "basemaps" package), the map type to use - default is 
+#' "world_imagery" from ESRI but you can provide any other options 
+#' available through the "get_maptypes" function from the basemaps package 
+#' (just provide your map service type).
+#' @param map.res for static maps with an automatic basemap (provided 
+#' through the "basemaps" package), the resolution of the map (0-1). Default 
+#' NULL (will use the basemaps default).
 #' @return An interactive or static map of predicted kappa values for barrier 
 #' segments.
 #' @example examples/examples_mapPredictions.R
@@ -39,7 +57,9 @@
 
 mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                            tracks.sf = NULL, breaks = NULL,
-                           add.basemap = FALSE, maptype = NULL, basemap = NULL){
+                           add.basemap = FALSE, maptype = NULL, basemap = NULL,
+                           box = NULL, map.service = "esri", 
+                           map.type = "world_imagery", map.res = NULL){
   if(! "barrier.id" %in% colnames(predictions)) 
     stop("Predictions dataframe does not have a barrier.id column.")
   # check for multiple linear features
@@ -73,9 +93,6 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
         return(map)
       }
     }else{
-      box <- barrier.sf |>
-        st_transform(4326) |>
-        st_bbox()
       barrier_segment <- barrier_segment |>
         st_transform(4326)
       barrier_segment$kappa.hat <- signif(barrier_segment$kappa.hat,
@@ -86,33 +103,43 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
       if(is.null(breaks)){
         breaks <- pretty(log10(barrier_segment$kappa.hat))
         breaks_labels <- signif(10^breaks, 1)
+        log_kappa <- TRUE
       }else{
-        breaks <- log10(breaks)
-        breaks_labels <- signif(10^breaks, 1)
+        breaks <- breaks
+        breaks_labels <- breaks
+        log_kappa <- FALSE
       }
       if(is.null(tracks.sf)){
         if(add.basemap){
           if(is.null(maptype) & is.null(basemap)){
-            box <- barrier.sf |>
-              st_bbox()
-            box <- barrier.sf |>
-              st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
-              st_transform(4326) |>
-              st_bbox() 
+            if(is.null(box)){
+              box <- barrier.sf |>
+                st_bbox()
+              box <- barrier.sf |>
+                st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
+                st_transform(4326) |>
+                st_bbox() 
+            }
             bm <- suppressWarnings(basemaps::basemap_raster(box, 
-                                           map_service = "esri", 
-                                           map_type = "world_physical_map"))
-            box <- barrier.sf |>
-              st_transform(st_crs(bm)) |>
+                                           map_service = map.service, 
+                                           map_type = map.type,
+                                           map_res = map.res))
+            
+            box <- box |>
+              st_as_sfc() |> 
+              st_transform(crs = st_crs(bm)) |>
               st_bbox()
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
+            if(log_kappa){
+              barrier_segment2$kappa.hat <- log10(kappa.hat)
+            }
             
             map <- ggplot() +
               layer_spatial(data = bm) +
               guides(fill = "none") +
-              geom_sf(data = barrier_segment2, aes(color = log10(kappa.hat)), 
-                      linewidth = 1.5) +
+              geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
+                      linewidth = 2) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -124,11 +151,24 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               coord_sf(expand=FALSE)+
               theme_classic() + theme(text = element_text(size = 11))
           }else if(!is.null(maptype) & is.null(basemap)){
+            if(is.null(box)){
+              box <- barrier.sf |>
+                st_transform(4326) |>
+                st_bbox()
+            }else{
+              box <- box |>
+                st_as_sfc() |> 
+                st_transform(crs = 4326) |>
+                st_bbox()
+            }
+            if(log_kappa){
+              barrier_segment$kappa.hat <- log10(kappa.hat)
+            }
             map <- ggplot() +
               annotation_map_tile(zoomin = -1, 
                                   type = maptype) +
-              geom_sf(data = barrier_segment, aes(color = log10(kappa.hat)), 
-                      linewidth = 1.5) +
+              geom_sf(data = barrier_segment, aes(color = kappa.hat), 
+                      linewidth = 2) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -141,21 +181,30 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               theme_classic() + theme(text = element_text(size = 11))
           }else if(!is.null(basemap)){
             bm <- basemap
-            
-            box <- barrier.sf |>
-              st_bbox()
-            box <-  suppressWarnings(barrier.sf |>
-              st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
-              st_transform(st_crs(bm)) |>
-              st_bbox())
+            if(is.null(box)){
+              box <- barrier.sf |>
+                st_bbox()
+              box <-  suppressWarnings(barrier.sf |>
+                st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
+                st_transform(st_crs(bm)) |>
+                st_bbox())
+            }else{
+              box <- box |>
+                st_as_sfc() |> 
+                st_transform(crs = st_crs(bm)) |>
+                st_bbox()
+            }
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
+            if(log_kappa){
+              barrier_segment2$kappa.hat <- log10(kappa.hat)
+            }
             
             map <- ggplot() +
               layer_spatial(data = bm) +
               guides(fill = "none") +
-              geom_sf(data = barrier_segment2, aes(color = log10(kappa.hat)), 
-                      linewidth = 1.5) +
+              geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
+                      linewidth = 2) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -170,9 +219,22 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           }
           return(map)
         }else{
+          if(is.null(box)){
+            box <- barrier.sf |>
+              st_transform(4326) |>
+              st_bbox()
+          }else{
+            box <- box |>
+              st_as_sfc() |> 
+              st_transform(crs = 4326) |>
+              st_bbox()
+          }
+          if(log_kappa){
+            barrier_segment$kappa.hat <- log10(kappa.hat)
+          }
           map <- ggplot() +
-            geom_sf(data = barrier_segment, aes(color = log10(kappa.hat)), 
-                    linewidth = 1.5) +
+            geom_sf(data = barrier_segment, aes(color = kappa.hat), 
+                    linewidth = 2) +
             scale_color_viridis_c(option = "B", breaks = breaks,
                                   labels = breaks_labels,
                                   name = expression(hat(kappa))) +
@@ -186,35 +248,40 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           return(map)
         }
       }else{
-        tracks <-  suppressWarnings(tracks.sf |> 
-          dplyr::group_by(ID) |>
-          dplyr::summarize(do_union=FALSE) |>
-          sf::st_cast("LINESTRING") |> st_transform(4326) |>
-          sf::st_crop(box))
         if(add.basemap){
           if(is.null(maptype) & is.null(basemap)){
-            box <- barrier.sf |>
-              st_bbox()
-            box <- barrier.sf |>
-              st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
-              st_transform(4326) |>
-              st_bbox() 
-            bm <- suppressWarnings(
-              basemaps::basemap_raster(box, 
-                                       map_service = "esri",
-                                       map_type = "world_physical_map"))
-            box <- barrier.sf |>
-              st_transform(st_crs(bm)) |>
+            if(is.null(box)){
+              box <- barrier.sf |>
+                st_bbox()
+              box <- barrier.sf |>
+                st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
+                st_transform(4326) |>
+                st_bbox()
+            }
+            bm <- suppressWarnings(basemaps::basemap_raster(
+              box, map_service = map.service, map_type = map.type,
+              map_res = map.res))
+            box <- box |>
+              st_as_sfc() |> 
+              st_transform(crs = st_crs(bm)) |>
               st_bbox()
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
-            
+            if(log_kappa){
+              barrier_segment2$kappa.hat <- log10(kappa.hat)
+            }
+            tracks <- suppressWarnings(tracks.sf |> 
+                                         dplyr::group_by(ID) |>
+                                         dplyr::summarize(do_union=FALSE) |>
+                                         sf::st_cast("LINESTRING") |> 
+                                         st_transform(4326) |>
+                                         sf::st_crop(box))
             map <- ggplot() +
               layer_spatial(data = bm) +
               guides(fill = "none") +
               geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
-              geom_sf(data = barrier_segment2, aes(color = log10(kappa.hat)), 
-                      linewidth = 1.5) +
+              geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
+                      linewidth = 2) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -226,12 +293,31 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               coord_sf(expand=FALSE)+
               theme_classic() + theme(text = element_text(size = 11))
           }else if(!is.null(maptype) & is.null(basemap)){
+            if(is.null(box)){
+              box <- barrier.sf |>
+                st_transform(4326) |>
+                st_bbox()
+            }else{
+              box <- box |>
+                st_as_sfc() |> 
+                st_transform(crs = 4326) |>
+                st_bbox()
+            }
+            if(log_kappa){
+              barrier_segment$kappa.hat <- log10(kappa.hat)
+            }
+            tracks <- suppressWarnings(tracks.sf |> 
+                                         dplyr::group_by(ID) |>
+                                         dplyr::summarize(do_union=FALSE) |>
+                                         sf::st_cast("LINESTRING") |> 
+                                         st_transform(4326) |>
+                                         sf::st_crop(box))
             map <- ggplot() +
               annotation_map_tile(zoomin = -1, 
                                   type = maptype) +
               geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
-              geom_sf(data = barrier_segment, aes(color = log10(kappa.hat)), 
-                      linewidth = 1.5) +
+              geom_sf(data = barrier_segment, aes(color = kappa.hat), 
+                      linewidth = 2) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -244,22 +330,31 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
               theme_classic() + theme(text = element_text(size = 11))
           }else if(!is.null(basemap)){
             bm <- basemap
-            
-            box <- barrier.sf |>
-              st_bbox()
-            box <- barrier.sf |>
-              st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
-              st_transform(st_crs(bm)) |>
-              st_bbox()
+            if(is.null(box)){
+              box <- barrier.sf |>
+                st_bbox()
+              box <- barrier.sf |>
+                st_buffer(abs(as.numeric(box[1])-as.numeric(box[2]))*.001) |>
+                st_transform(st_crs(bm)) |>
+                st_bbox() 
+            }
             barrier_segment2 <- barrier_segment |>
               st_transform(st_crs(bm))
-            
+            if(log_kappa){
+              barrier_segment2$kappa.hat <- log10(kappa.hat)
+            }
+            tracks <- suppressWarnings(tracks.sf |> 
+                                         dplyr::group_by(ID) |>
+                                         dplyr::summarize(do_union=FALSE) |>
+                                         sf::st_cast("LINESTRING") |> 
+                                         st_transform(4326) |>
+                                         sf::st_crop(box))
             map <- ggplot() +
               layer_spatial(data = bm) +
               guides(fill = "none") +
               geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
-              geom_sf(data = barrier_segment2, aes(color = log10(kappa.hat)), 
-                      linewidth = 1.5) +
+              geom_sf(data = barrier_segment2, aes(color = kappa.hat), 
+                      linewidth = 2) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
                                     name = expression(hat(kappa))) +
@@ -273,10 +368,19 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
           }
           return(map)
         }else{
+          if(log_kappa){
+            barrier_segment$kappa.hat <- log10(kappa.hat)
+          }
+          tracks <- suppressWarnings(tracks.sf |> 
+                                       dplyr::group_by(ID) |>
+                                       dplyr::summarize(do_union=FALSE) |>
+                                       sf::st_cast("LINESTRING") |> 
+                                       st_transform(4326) |>
+                                       sf::st_crop(box))
           map <- ggplot() +
             geom_sf(data = tracks, color = "grey40", linewidth = 0.7) +
-            geom_sf(data = barrier_segment, aes(color = log10(kappa.hat)), 
-                    linewidth = 1.5) +
+            geom_sf(data = barrier_segment, aes(color = kappa.hat), 
+                    linewidth = 2) +
             scale_color_viridis_c(option = "B", breaks = breaks,
                                   labels = breaks_labels,
                                   name = expression(hat(kappa))) +
