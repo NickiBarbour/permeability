@@ -1,0 +1,12 @@
+Package: permeability
+Title: Quantifying permeability of barriers for animal movement
+Version: 1.0.0.0
+Authors: Anonymous
+Description: This package estimates the permeability of a linear barrier for a set of tracking data, with the option to estimate permeability as a function of covariate(s). Package includes functions to format data, create a "crossing table" of null and actual animal crossings of a barrier, plot crossings, and fit permeability null and covariate models for model comparison and estimation of permeability.
+License: PRIVATE
+Encoding: UTF-8
+VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+Depends: sf, circular, kableExtra, MASS, dplyr, mgcv, knitr
+Suggests: future.apply, plyr, ggplot2, ggspatial, mapview, basemaps, viridis, lubridate, prettymapr
+RoxygenNote: 7.3.2
