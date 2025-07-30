@@ -38,15 +38,19 @@
 #' user-provided value - just ensure that this value accurately reflects 
 #' the distance from the barrier within which steps have a viable possibility
 #' of crossing.  
-#' @param sample.rate regular desired sample rate (in hours) of input data. 
+#' @param sample.rate regular desired sample rate (default in hours) of input 
+#' data. 
 #' This is an important assumption of the package. Steps with an irregular 
 #' sample rate will not be used to create the crossing table. It's the user's 
 #' responsibility to ensure a (mostly) regular sample rate (some missing steps
 #' are tolerable as they simply not be used but you need enough data to 
 #' robustly estimate permeability) for their data prior 
 #' to uploading it to the package functions. 
-#' @param sample.rate.tolerance tolerance level for sample rate (in hours) - 
-#'  defaults to 1 hour if `sample.rate.tolerance = NULL`.
+#' @param sample.rate.tolerance tolerance level for sample rate  - defaults to 
+#' +/- 1 time unit around the sample rate if `sample.rate.tolerance = NULL`.
+#' @param sample.rate.units units of sample rate and tolerance arguments.
+#' Default in hours but can also specify any units available to the 
+#' `difftime` function in base R (e.g., "secs","mins", "days","weeks").
 #' @param parallel whether to run function in parallel or not (recommended for 
 #' very large datasets)
 #' @param n.cores numbers of cores to use if running in parallel.  Defaults to 
@@ -77,6 +81,7 @@
 prepPermeability <- function(move.df, barrier, 
                              sample.rate, 
                              sample.rate.tolerance = NULL,
+                             sample.rate.units = "hours",
                              buffer.m = NULL, 
                              barrier.covar.values = NULL,
                              move.covar.names = NULL, 
@@ -127,14 +132,14 @@ prepPermeability <- function(move.df, barrier,
     mutate(L = c(NA,Mod(diff(X + 1i*Y))),
            dT = c(NA, round(difftime(Time[-1], 
                                    Time[-length(Time)], 
-                                   units = "hours"))))
+                                   units = sample.rate.units))))
   
   if(is.null(sample.rate.tolerance)){
-    sample.rate <- c(sample.rate-1, sample.rate, sample.rate+1)
+    sample.rate <- c((sample.rate-1):(sample.rate+1))
   }else{
-    sample.rate <- unique(c(sample.rate-sample.rate.tolerance, 
-                     sample.rate, 
-                     sample.rate+sample.rate.tolerance))
+    sample.rate <- unique(
+      c((sample.rate-sample.rate.tolerance):(sample.rate+
+                                               sample.rate.tolerance)))
   }
   
   # retain og buffer value
@@ -165,6 +170,7 @@ prepPermeability <- function(move.df, barrier,
                                  prepPermeability_individual,
                                  future.seed = TRUE,
                                  sample.rate = sample.rate,
+                                 sample.rate.units = sample.rate.units,
                                  buffer.m = buffer.m,
                                  covar.names = move.covar.names, 
                                  covar.values = move.covar.values, 
@@ -178,6 +184,7 @@ prepPermeability <- function(move.df, barrier,
       data_list <- lapply(id_list, 
                           prepPermeability_individual,
                           sample.rate = sample.rate,
+                          sample.rate.units = sample.rate.units,
                           buffer.m = buffer.m,
                           covar.names = move.covar.names, 
                           covar.values = move.covar.values, 
@@ -193,6 +200,7 @@ prepPermeability <- function(move.df, barrier,
   }else{
     data <- prepPermeability_individual(df = df,
                                         sample.rate = sample.rate,
+                                        sample.rate.units = sample.rate.units,
                                         buffer.m = buffer.m,
                                         covar.names = move.covar.names, 
                                         covar.values = move.covar.values, 
@@ -235,6 +243,7 @@ prepPermeability_individual <- function(df, covar.names = NULL,
                                         covar.values = "start", 
                                         barrier, 
                                         buffer.m, sample.rate,
+                                        sample.rate.units,
                                         plot.track = TRUE, verbose = TRUE){
   if(verbose) print(paste("Formatting Data for ID:", df$ID[1]))
   
@@ -318,7 +327,7 @@ prepPermeability_individual <- function(df, covar.names = NULL,
                         Z.end = Z[-1],
                         D.time = round(difftime(Time[-1], 
                                                 Time[-length(Time)], 
-                                                units = "hours")) |> 
+                                                units = sample.rate.units)) |> 
                           as.numeric(),
                         ID = ID[-length(ID)],
                         Time = Time[-length(Time)]) |> 
@@ -390,7 +399,7 @@ prepPermeability_individual <- function(df, covar.names = NULL,
                         Z.end = Z[-1],
                         D.time = round(difftime(Time[-1], 
                                                 Time[-length(Time)], 
-                                                units = "hours")) |> 
+                                                units = sample.rate.units)) |> 
                           as.numeric(),
                         ID = ID[-length(ID)],
                         Time = Time[-length(Time)]) |> 
@@ -495,7 +504,7 @@ summary.permdata <- function(x){
   Buffer_d <- round(attr(x, "buffer.size"), digits = 2)
   
   data_summary <- data.frame("N.IDs in buffer" = N_ID,
-                             "Sample rate (hrs)" = Sample_rate,
+                             "Sample rate" = Sample_rate,
                              "Date range" = Date_range,
                              "N.steps in buffer" = Steps_inbuffer,
                              "N.steps to cross" = N_crossed,
