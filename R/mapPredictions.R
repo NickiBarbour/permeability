@@ -48,6 +48,9 @@
 #' @param map.res for static maps with an automatic basemap (provided 
 #' through the "basemaps" package), the resolution of the map (0-1). Default 
 #' NULL (will use the basemaps default).
+#' @param nocrossings.color for static maps and portions of the road with no 
+#' actual or null
+#' crossings, what color to show these segments on the road sf object.
 #' @return An interactive or static map of predicted kappa values for barrier 
 #' segments.
 #' @example examples/examples_mapPredictions.R
@@ -57,7 +60,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                            tracks.sf = NULL, breaks = NULL,
                            add.basemap = FALSE, basemap = NULL,
                            box = NULL, map.service = "esri", 
-                           map.type = "world_imagery", map.res = NULL){
+                           map.type = "world_imagery", map.res = NULL,
+                           nocrossings.color = "grey"){
   if(! "barrier.id" %in% colnames(predictions)) 
     stop("Predictions dataframe does not have a barrier.id column.")
   # check for multiple linear features
@@ -93,6 +97,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
     }else{
       barrier_segment <- barrier_segment |>
         st_transform(4326)
+      # extract no crossing-segments (have a 0, no actual or null crossings)
+      #barrier_segment[which(barrier_segment$kappa.hat==0),]$kappa.hat <- NA
       barrier_segment$kappa.hat <- signif(barrier_segment$kappa.hat,
                                           digits = 1)
       if(is.null(breaks)){
@@ -140,7 +146,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                       linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
-                                    name = expression(hat(kappa))) +
+                                    name = expression(hat(kappa)),
+                                    na.value = nocrossings.color) +
               annotation_scale() +
               annotation_north_arrow(height = unit(0.5,"cm"), 
                                      width = unit(0.5,"cm"), 
@@ -176,7 +183,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                       linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
-                                    name = expression(hat(kappa))) +
+                                    name = expression(hat(kappa)),
+                                    na.value = nocrossings.color) +
               annotation_scale() +
               annotation_north_arrow(height = unit(0.5,"cm"), 
                                      width = unit(0.5,"cm"), 
@@ -206,7 +214,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                     linewidth = 1.5) +
             scale_color_viridis_c(option = "B", breaks = breaks,
                                   labels = breaks_labels,
-                                  name = expression(hat(kappa))) +
+                                  name = expression(hat(kappa)),
+                                  na.value = nocrossings.color) +
             annotation_scale() +
             annotation_north_arrow(height = unit(0.5,"cm"), 
                                    width = unit(0.5,"cm"), 
@@ -255,7 +264,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                       linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
-                                    name = expression(hat(kappa))) +
+                                    name = expression(hat(kappa)),
+                                    na.value = nocrossings.color) +
               annotation_scale() +
               annotation_north_arrow(height = unit(0.5,"cm"), 
                                      width = unit(0.5,"cm"), 
@@ -292,7 +302,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                       linewidth = 1.5) +
               scale_color_viridis_c(option = "B", breaks = breaks,
                                     labels = breaks_labels,
-                                    name = expression(hat(kappa))) +
+                                    name = expression(hat(kappa)),
+                                    na.value = nocrossings.color) +
               annotation_scale() +
               annotation_north_arrow(height = unit(0.5,"cm"), 
                                      width = unit(0.5,"cm"), 
@@ -328,7 +339,8 @@ mapPredictions <- function(predictions, barrier.sf, interactive = FALSE,
                     linewidth = 1.5) +
             scale_color_viridis_c(option = "B", breaks = breaks,
                                   labels = breaks_labels,
-                                  name = expression(hat(kappa))) +
+                                  name = expression(hat(kappa)),
+                                  na.value = nocrossings.color) +
             annotation_scale() +
             annotation_north_arrow(height = unit(0.5,"cm"), 
                                    width = unit(0.5,"cm"), 
@@ -388,10 +400,10 @@ getAnnotatedBarrierSegments <- function(feature_predictions,
                            all.x = TRUE) |> unique()
   # change any NA's for kappa.hat to 0 
   ## (segments with no actual/potential crossings)
-  if(nrow(subset(barrier_segment, is.na(kappa.hat)))>0){
-    barrier_segment[which(is.na(
-      barrier_segment$kappa.hat)),]$kappa.hat <- 0
-  }
+  #if(nrow(subset(barrier_segment, is.na(kappa.hat)))>0){
+   # barrier_segment[which(is.na(
+     # barrier_segment$kappa.hat)),]$kappa.hat <- 0
+  #}
   if("Feature.ID" %in% colnames(feature_predictions)){
     barrier_segment$Feature.ID <- id
   }

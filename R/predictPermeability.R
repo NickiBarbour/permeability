@@ -99,18 +99,18 @@ predict.permfit <- function(fit, new.data = NULL, se.fit = TRUE,
             plan(multisession, workers = n_cores)
             predict.bs <- future_sapply(
               1:iterations,
-              function(i) runBootstrap(i, 
+              function(i) try(runBootstrap(i, 
                                        model_formula = formula,
-                                       og_data = fit$data), future.seed = TRUE)
+                                       og_data = fit$data)), future.seed = TRUE)
             plan(sequential)
           }else{
             plan(multisession, workers = n_cores)
             predict.bs <- future_sapply(
               1:iterations,
-              function(i) runBootstrap(i, 
+              function(i) try(runBootstrap(i, 
                                        model_formula = formula,
                                        og_data = fit$data,
-                                       new_data = new.data), future.seed = TRUE)
+                                       new_data = new.data)), future.seed = TRUE)
             plan(sequential)
           }
         }else{
@@ -119,32 +119,35 @@ predict.permfit <- function(fit, new.data = NULL, se.fit = TRUE,
           if(is.null(new.data)){
             predict.bs <- sapply(
               1:iterations,
-              function(i) runBootstrap(i, 
+              function(i) try(runBootstrap(i, 
                                        model_formula = formula,
-                                       og_data = fit$data))
+                                       og_data = fit$data)))
           }else{
             predict.bs <- sapply(
               1:iterations,
-              function(i) runBootstrap(i, 
+              function(i) try(runBootstrap(i, 
                                        model_formula = formula,
                                        og_data = fit$data,
-                                       new_data = new.data))
+                                       new_data = new.data)))
           }
         }
         # get kappa est
         Y.hat <- fit.scaled %*% beta.hat$estimate
         kappa_hat <- exp(Y.hat) 
-        predict.bs2 <- do.call("cbind", predict.bs)
-        predict.bs2[is.infinite(predict.bs2)] <- NA
+        # drop any errors (would happen if fit.scaled didn't have the same
+        ## dimensions as beta.hat$estimate with bootstrapping)
+        predict.bs2 <- predict.bs[!sapply(predict.bs, is.character)]
+        predict.bs3 <- do.call("cbind", predict.bs2)
+        predict.bs3[is.infinite(predict.bs3)] <- NA
         
         return(data.frame(kappa.hat = kappa_hat,
                           ci.low =  
-                            apply(predict.bs2, 1, 
+                            apply(predict.bs3, 1, 
                                   function(x) quantile(x,
                                                        probs = (1-conf.level)/2, 
                                                        na.rm = TRUE)),
                           ci.high = 
-                            apply(predict.bs2, 1, 
+                            apply(predict.bs3, 1, 
                                   function(x) quantile(x,
                                                        probs = 
                                                          conf.level + 
