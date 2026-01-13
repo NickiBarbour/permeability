@@ -35,7 +35,7 @@
 #' @param parallel whether to run function in parallel or not (recommended for 
 #' very large datasets)
 #' @param n.cores numbers of cores to use if running in parallel.  Defaults to 
-#' 80% of the number of available cores. 
+#' 50% of the number of available cores. 
 #' @param verbose whether to print progress/messages or not - default TRUE
 #' @return Data frame with rows corresponding to each observed step in the data 
 #' and columns for: `ID`, `Step.ID` (id of the step, as output from
@@ -106,7 +106,7 @@ buildCrossingTable <- function(permdata, parallel = FALSE, n.cores = NULL,
     
     if(parallel){
       if(is.null(n.cores)){
-        n.cores <- round(parallel::detectCores()*0.80) # use 80% of cores
+        n.cores <- round(parallel::detectCores()*0.50) # use 50% of cores
       } 
       plan(multisession, workers = n.cores)
       if(verbose) message(paste(n.cores, "cores are being used: running in parallel."))

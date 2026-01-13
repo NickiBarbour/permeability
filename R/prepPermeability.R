@@ -54,7 +54,7 @@
 #' @param parallel whether to run function in parallel or not (recommended for 
 #' very large datasets)
 #' @param n.cores numbers of cores to use if running in parallel.  Defaults to 
-#' 80% of the number of available cores. 
+#' 50% of the number of available cores. 
 #' @param verbose whether to print progress or not - default TRUE
 #' 
 #' @return `permdata` object, which is a list containing two "stepwise" data 
@@ -160,7 +160,7 @@ prepPermeability <- function(move.df, barrier,
     
     if(parallel){
       if(is.null(n.cores)){
-        n.cores <- round(parallel::detectCores()*0.80) # use 80% of cores
+        n.cores <- round(parallel::detectCores()*0.50) # use 50% of cores
       } 
       if(verbose) print(paste(n.cores, "cores are being used: running in parallel."))
       
