@@ -1,6 +1,6 @@
 ## `permeability` R package
 
-NOTE (updated July 21, 2025): *the 'permeability" package is currently under peer review and is subject to updates in the next few months. Keep an eye out for our paper and for any updates to this repo!*
+NOTE (updated January 13, 2026): *the 'permeability" package is currently under peer review and is subject to updates in the next few months. Keep an eye out for our paper and for any updates to this repo!*
 
 The `permeability` package uses maximum likelihood estimation with animal biotelemetry data to statistically estimate the permeability of a linear barrier of interest. Package functions take an input set of movement tracks with similar sampling rates and quantify crossings of a given linear barrier.
 
