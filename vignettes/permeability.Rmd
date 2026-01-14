@@ -528,20 +528,20 @@ Barrier data can either be a spatial LINESTRING object (class `sf`) or a matrix 
 str(hwy1_west)
 ```
 
-X and Y coordinates can be extracted from the `sf` object and converted to a matrix using the `st_coordinates` function. 
+X and Y coordinates can be extracted from the `sf` object and converted to a matrix using the `st_coordinates` function. These coordinates will form the "segments" of the barrier, which will be used with other functions to determine if they each intersect with animal movement steps or not.
 
 ```{r headbarrier}
 hwy1_west_xy <- st_coordinates(hwy1_west)
 head(hwy1_west_xy)
 ```
 
-The output includes a third column `L1` for the id of the line. If the barrier object has multiple lines (e.g., a grid or network format), this column is especially useful for keeping track of distinct geometric lines. However, note that even features that appear to be one line are often made of multiple lines:
+The output includes a third column `L1` for the id of the line. If the barrier object has multiple lines (e.g., a grid or network format), this column is especially useful for keeping track of distinct geometric lines (there will be a unique number for each line). However, note that even features that *appear* to be one line are often made of multiple lines:
 
 ```{r checkuniquelines}
 unique(hwy1_west_xy[,"L1"])
 ```
 
-If barrier data is being provided as a non-`sf` object (matrix of barrier segments), `permeability` functions require the barrier data to contain `X` and `Y` coordinates and the third column to be named `line_id`, even if there is only 1 line in the object.
+If barrier data is being provided as a non-`sf` object (matrix of barrier segments), `permeability` functions require the barrier data to contain `X` and `Y` coordinates and the third column to be named `line_id`, even if there is only 1 line in the object. The `line_id` column should contain unique numbers for each unique line.
 
 Alternatively, users can simply provide their barrier data as an `sf` LINESTRING object to `permeability` functions.
 
@@ -549,13 +549,14 @@ Alternatively, users can simply provide their barrier data as an `sf` LINESTRING
 colnames(hwy1_west_xy) <- c("X","Y","line_id")
 ```
 
-Users can also annotate these coordinates with covariate values specific to each segment (see simulation examples above). Just keep in mind that for each line in your barrier coordinates matrix (e.g., each unique `line_id`), there are $n$ rows but $1 - n$ segments. 
+Users can also annotate these coordinates with covariate values specific to each segment (see simulation examples above). Just keep in mind that for each line in your barrier coordinates matrix (e.g., each unique `line_id`), there are $n$ rows but $n - 1$ segments. 
 
 Additionally, if your LINESTRING object is continuous in space but made of multiple lines (e.g., the `hwy1_west` example here, which has 29 lines within a continuous feature), you will need to account for the fact that the end of each line has the same spatial point as the beginning of the next line (resulting in duplicates, unless you remove them).
 
 ```{r checkxyduplicates}
 hwy1_west_xy[566:573,]
 ```
+
 Examples are shown for this with the covariate model examples below.
 
 
@@ -618,7 +619,9 @@ bor_format <- prepPermeability(move.df = subset(boreal_caribou, ID == "ID_3"),
 
 <br>
 
-Covariates can also be annotated to the `permdata` object. Covariates specific to animal movement steps can be provided with the `move.covar.names` and `move.covar.values` arguments. Barrier segment specific covariates can be specified using the `barrier.covar.values` argument, which should contain a dataframe of covariate values for every barrier segment (e.g., rows correspond to each barrier segment or each unique `barrier.id`, AFTER accounting for unique lines, e.g., any duplicate segments).  
+Covariates can also be annotated to the `permdata` object. Covariates specific to animal movement steps can be provided with the `move.covar.names` and `move.covar.values` arguments. Barrier segment specific covariates can be specified using the `barrier.covar.values` argument, which should contain a dataframe of covariate values for every barrier segment (e.g., rows correspond to each barrier segment or each unique `barrier.id`, AFTER accounting for unique lines, e.g., any duplicate coordinates). See the figure below for a visual example of how covariate values would align with each barrier segment in a barrier with 1 or more lines:
+
+![](figures/Barrier_segment_numbers.png)
 
 For movement step specific covariates, the `prepPermeability` function takes a vector with the name(s) of the covariate column(s) in the input movement data (`move.covar.names`), as well as an argument for how to annotate steps with covariate data (`move.covar.values`, options being to use covariate values from the `start` location in the movement step, the `end` location in the step, or for numeric covariates, optionally the `mean` or `difference` of the start and end location covariate values - defaults `start`).
 
@@ -697,13 +700,67 @@ str(bor_format$track)
 ```{r strprepbor2barrier}
 str(bor_format$barrier)
 ```
+
+### Summarize crossings
   
 
-The `print` or `summary` functions can also be used to get a quick summary of the `permdata` object, including the final buffer size (`Buffer.dist.m`), number of ID's with locations in the buffer (`N.IDs.in.Buffer`), sample rate and date range of the data (`Sample.rate.hrs`, `Date.range`), number of total steps in the buffer (`N.steps.in.buffer`), the number of steps that crossed the barrier (`N.steps.to.Cross`), and the mean steplength for steps that crossed the barrier (`Mean.crossing.steplength.m`). 
+The `print` or `summary` functions can also be used to get a quick summary of the `permdata` object.
+
+Output includes the final buffer size (`Buffer.dist.m`), number of ID's with locations in the buffer (`N.IDs.in.Buffer`), sample rate and date range of the data (`Sample.rate.hrs`, `Date.range`), number of total steps in the buffer (`N.steps.in.buffer`), the number of steps that crossed the barrier (`N.steps.to.Cross`), and the mean steplength for steps that crossed the barrier (`Mean.crossing.steplength.m`). 
 
 ```{r}
 summary(bor_format)
 ```
+
+### Plot crossings
+
+The `plotCrossings` function can be used with the `permdata` object to visualize crossings, with the default being a base R plot for all individuals. Setting `individual.plots=TRUE` will output plots for tracks individually.
+
+```{r plotcrossingsbasic, fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE}
+plotCrossings(permdata = bor_format)
+```
+
+![](figures/PlotCrossings_1.png)
+
+<br>
+
+More advanced options for `plotCrossings` include an interactive map (`interactive.map=TRUE`, using the `mapview` package) or a static map (`static.map=TRUE`, `ggplot2` package, with the option to include a basemap with `add.basemap=TRUE` using the `ggspatial` and `prettymapr` packages). Static maps can be easily exported as images. 
+
+
+
+```{r mappingpackages, eval = TRUE}
+library(mapview)
+```
+
+Importantly, to use the interactive and static options for `plotCrossings`, the user also needs to provide the original data and the `sf` version of the barrier, for spatial mapping.
+
+```{r plotcrossings, fig.align = "center", fig.width = 6, fig.height=6, eval = TRUE}
+plotCrossings(permdata = bor_format, 
+              original.data = boreal_caribou,
+              barrier.sf = hwy1_west,
+              interactive.map = TRUE)
+```
+
+
+```{r mappingpackages2, eval = TRUE}
+library(ggspatial);library(ggplot2);library(prettymapr)
+```
+
+
+
+```{r plotcrossings2, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE}
+crossing_map <- plotCrossings(permdata = bor_format, 
+                              original.data = boreal_caribou,
+                              barrier.sf = hwy1_west,
+                              static.map = TRUE,
+                              add.basemap = TRUE)
+
+crossing_map
+```
+
+![](figures/PlotCrossings_2.png)
+
+<br>
 
 ### Build crossing table
 
@@ -819,47 +876,6 @@ load("./data/final_borct.rda")
 ```{r finalct}
 str(bor_cT)
 ```
-
-### Plot crossings
-
-The `plotCrossings` function can be used with the `permdata` object to visualize crossings, with the default being a base R plot for all individuals. Setting `individual.plots=TRUE` will output plots for tracks individually.
-
-```{r plotcrossingsbasic, fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE}
-plotCrossings(permdata = bor_format)
-```
-
-![](figures/PlotCrossings_1.png)
-
-<br>
-
-More advanced options for `plotCrossings` include an interactive map (`interactive.map=TRUE`, using the `mapview` package) or a static map (`static.map=TRUE`, `ggplot2` package, with the option to include a basemap with `add.basemap=TRUE` using the `ggspatial` package). Static maps can be easily exported as images. 
-
-```{r mappingpackages, eval = TRUE}
-library(mapview)
-```
-
-Importantly, to use the interactive and static options for `plotCrossings`, the user also needs to provide the original data and the `sf` version of the barrier, for spatial mapping.
-
-```{r plotcrossings, fig.align = "center", fig.width = 6, fig.height=6, eval = TRUE}
-plotCrossings(permdata = bor_format, 
-              original.data = boreal_caribou,
-              barrier.sf = hwy1_west,
-              interactive.map = TRUE)
-```
-
-
-
-```{r plotcrossings2, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE}
-crossing_map <- plotCrossings(permdata = bor_format, 
-                              original_data = boreal_caribou,
-                              barrier.sf = hwy1_west,
-                              static.map = TRUE,
-                              add.basemap = TRUE)
-
-crossing_map
-```
-
-![](figures/PlotCrossings_2.png)
 
 <br>
 
@@ -1072,13 +1088,13 @@ Predictions from fitted models can also be mapped to `sf` barrier segments, usin
 
 This function takes a dataframe of predictions, including a `barrier.id` value for each value so that it can be mapped to barrier segments, and the original `sf` barrier object used as input to the `prepPermeability` function.
 
-The function can also handle multiple linear features; for example, if you had three highways of interest occurring in the same spatial area, you could bind them together into one large `sf` object, including a column `Feature.ID` to distinguish them. The `predictions` dataframe should also have a column called `Feature.ID`, to map individual linear feature predictions to their own geometry.
+The function can also handle multiple linear features; for example, if you had three highways of interest occurring in the same spatial area, you could bind them together into one large `sf` object, including a column `Feature.ID` to distinguish them. The `predictions` dataframe object should also have a column called `Feature.ID`, to map individual linear feature predictions to their own geometry.
 
-This function additionally has options for creating 1) a static map without a basemap (default); 2) a static map *with* a basemap (using `basemaps` with an ESRI landscape map, by default - or users can select their own map service provider, map type, or map resolution, with `map.service`, `map.type`, or `map.res` - see Help file for more details); or 3) create an interactive map (with `mapview` and `interactive = TRUE`). 
+The `mapPredictions` function additionally has options for creating 1) a static map without a basemap (default); 2) a static map *with* a basemap (using `basemaps` with an ESRI landscape map, by default - or users can select their own map service provider, map type, or map resolution, with `map.service`, `map.type`, or `map.res` - see Help file for more details); or 3) create an interactive map (with `mapview` and `interactive = TRUE`).
 
 Users can optionally add an `sf` POINT object of their movement data to map movement tracks with the barrier(s) (using the `tracks.sf` argument) or even add their own basemap (provided to the `basemap` argument). Other optional features include providing your plotting `breaks` for $\kappa$ values and changing the map extent with `box`.
 
-Here, we show an example predicting $\kappa$ values as a function of `km` along the highway, using the fitted `spline_km_model` from above. First, a `predictions` dataframe is created, storing `km` and corresponding `barrier.id` values for each barrier segment.
+Here, we show an example predicting $\kappa$ values as a function of `km` along Highway 1 West using the fitted `spline_km_model` from above. First, a `predictions` dataframe is created, storing `km` and corresponding `barrier.id` values for each barrier segment.
 
 ```{r dfpredictions, eval = FALSE}
 hwy1_west_z <- hwy1_west_xy[,1] + 1i*hwy1_west_xy[,2]
@@ -1090,7 +1106,7 @@ predictions <- cbind(hwy1_west_xy, hwy1_west_z) |>
   mutate(km = cumsum(km)/1000) |>
   mutate(barrier.id = 1:length(km)) |>
   data.frame() |>
-  subset(barrier.id %in%  # make predictions for barrier segments in crossing table (crossings possible)
+  subset(barrier.id %in%  # make predictions only for barrier segments in crossing table (crossings possible)
            seq(min(bor_cT$barrier.id), max(bor_cT$barrier.id, by = 1)))
 ```
 
@@ -1122,6 +1138,167 @@ map
 ```
 
 ![](figures/mapPrediction.png)
+
+<br>
+
+Note that areas of the highway spatial object where there were no potential or actual crossings are in grey.
+
+## Gridded Barrier Example: Pronghorn from Xu et al
+
+We perform an additional example for animals interacting with a "gridded" barrier or barrier with a network of lines using the example pronghorn and fence data from the `BaBA` package, another fantastic tool for characterizing animal behavior with respect to barriers. See [Xu et al 2021](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/1365-2664.13806) for more details on the `BaBA` method and package.
+
+The package can be installed using `devtools` with:
+
+```{r eval = FALSE}
+devtools::install_github("wx-ecology/BaBA")
+```
+
+```{r}
+library(BaBA)
+```
+
+
+Data from the `BaBA` package for the pronghorn (n = 2) and associated fence network can be loaded with the `data` function. 
+
+```{r}
+data("pronghorn")
+data("fences")
+```
+
+```{r}
+str(pronghorn)
+```
+
+```{r}
+str(fences)
+```
+
+The `fences` object is a MULTILINESTRING currently, it's converted to a LINESTRING format.
+
+```{r}
+fences2 <- fences |> 
+  st_cast("LINESTRING")
+```
+
+The pronghorn locations can be easily transformed into spatial lines to visualize the tracks with the fence network.
+
+```{r fig.align = "center", fig.width = 6, fig.height=6}
+pronghorn_tracks <- pronghorn |>
+  dplyr::group_by(Animal.ID) |>
+  dplyr::summarize(do_union = FALSE) |>
+  sf::st_cast("LINESTRING")
+
+mapview(pronghorn_tracks, zcol="Animal.ID") +
+  mapview(fences, color = "red")
+```
+
+The sample rate is assessed by finding the difference in time between consecutive observations for each pronghorn. The median sample rate is at 2 hours.
+
+```{r fig.align = "center", fig.width = 6, fig.height=6}
+sample.rate <- pronghorn |> 
+  dplyr::group_by(Animal.ID) |>
+  dplyr::mutate(dtime = c(0,round(difftime(date[-1], date[-length(date)], units ="hours")))) |>
+  data.frame() |>
+  ungroup()
+
+barplot(table(sample.rate$dtime))
+```
+
+The pronghorn data is further formatted for `permeability` by converting to a data frame format and adding the coordinates and the month as columns.
+
+```{r}
+pronghorn$X <- st_coordinates(pronghorn)[,1]
+pronghorn$Y <- st_coordinates(pronghorn)[,2]
+pronghorn_df <- pronghorn |>
+  data.frame() |>
+  mutate(ID = as.character(Animal.ID), Time = date) |>
+  mutate(Month = format(Time, "%m")) |>
+  select(ID, Time, X, Y, Month)
+```
+
+As example, the `prepPermeability` function is applied to just one individual, "103_2014".
+
+Note that because there are so many locations, the function takes a little while to run (~ 10 min).
+
+```{r eval = FALSE}
+prong_format <- prepPermeability(move.df = subset(pronghorn_df, ID == "103_2014"),
+                                 move.covar.names = "Month",
+                                 barrier = fences2,
+                                 sample.rate = 2)
+```
+
+```{r include = FALSE}
+load("./data/prong_format.rda")
+```
+
+
+The `print` function gives a quick summary of the crossings. Because it's a fence "network", all 4,372 steps for this individual are in the buffer.
+
+```{r}
+print(prong_format)
+```
+
+The crossings can be easily visualized with the default options for `plotCrossings`.
+
+```{r plotcrossingsbasic2, fig.align = "center", fig.width = 6, fig.height=6}
+plotCrossings(permdata = prong_format)
+```
+
+The crossing table is built using the `permdata` object. Note that due to the high number of movement *and* barrier segments, this will take a while (~ 30 min - 1 hr). 
+
+Run time for gridded barriers or networks such as this could be improved by simplifying the barrier, e.g., by aggregating segments (by a covariate of interest for example).
+
+```{r ctprong, eval = FALSE}
+prong_cT <- buildCrossingTable(permdata = prong_format)
+```
+
+```{r include = FALSE}
+load("./data/prong_cT.rda")
+```
+
+The movement step specific covariate stored in the `permdata` object can be easily annotated to the crossing table.
+
+```{r mergepermdata3}
+track_covar <- prong_format$track[,c("ID", "Step.ID","Month")]
+
+prong_cT <- merge(prong_cT, track_covar, by=c("ID", "Step.ID"), 
+                    all.x=TRUE)
+
+str(prong_cT)
+```
+
+The overall permeability of this fence network for this individual is low, with a $\kappa$ of 0.2 indicating that the probability of the pronghorn actually crossing the fence network is only 20% of the null probability of crossing (e.g., the fence network not being there).
+
+```{r prongnullmodel}
+null_model <- fitPermeability(data = prong_cT)
+null_model
+```
+
+Monthly permeability values can also be obtained with `Month` as a covariate.
+
+```{r prongcovarmodel}
+season_model <- fitPermeability(~ Month, data = prong_cT)
+season_model
+```
+
+Predictions can be made and plotted to visualize monthly differences in permeability. 
+
+```{r predictprongcovarmodel}
+predict_kappa <- data.frame(Month = unique(prong_cT$Month))
+prediction <- predict(season_model, new.data = predict_kappa, se.fit = TRUE)
+predict_kappa <- cbind(predict_kappa, prediction)
+predict_kappa
+```
+
+```{r plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6}
+ggplot(data = predict_kappa, aes(x = Month, y = kappa.hat)) +
+  geom_point(size=2, position = position_dodge(width = 1)) +
+  geom_errorbar(aes(ymin = ci.low, ymax = ci.high), linewidth=1, position = position_dodge(width = 1)) +
+  theme_classic() + xlab(" ")+ ylab("Predicted Kappa") +
+  scale_x_discrete(labels=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
+```
+
+According to these predictions, fence permeability is highest for this one pronghorn in May and November. The monthly differences indicate a seasonal spline may be appropriate.
 
 <br>
 

@@ -171,7 +171,7 @@ plotCrossings <- function(permdata, original.data = NULL,
             geom_sf(data = barrier_crop, color = "black") +
             geom_sf(data = steps_to_cross2, color = "orange", linewidth = 1) +
             theme_classic() +
-            shadow_spatial(box) +
+            #shadow_spatial(box) +
             theme(text = element_text(size = 11)))
           
           return(map)
@@ -296,7 +296,7 @@ plotCrossings_individual <- function(df_ID, barrier,
             geom_sf(data = step_to_cross2, color = "orange", linewidth = 1) +
             theme_classic() +
             theme(text = element_text(size = 11)) +
-            shadow_spatial(box) +
+            #shadow_spatial(box) +
             ggtitle(paste("ID", unique(df_ID$ID))))
           
           return(map)
