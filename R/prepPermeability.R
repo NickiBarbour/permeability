@@ -480,7 +480,7 @@ getClosest <- function(z1, z2){
 #' @export
 summary.permdata <- function(x){
   
-  data <- subset(x$track, In.buffer)
+  data <- subset(x$track, In.buffer & D.time %in% attr(x, "sample.rate"))
   
   N_ID <- length(unique(data$ID))
   
@@ -490,12 +490,12 @@ summary.permdata <- function(x){
   
   Date_range <- paste(min(data$Date), max(data$Date), sep = "-")
   
-  Steps_inbuffer <- nrow(subset(data, In.buffer))
+  Steps_inbuffer <- nrow(data)
   
   N_crossed <- sum(data$Crossed, na.rm = TRUE)
   
   if(N_crossed > 0){
-    Mean_SL <- round(mean(subset(data, Crossed & In.buffer)$L, na.rm = TRUE), 
+    Mean_SL <- round(mean(subset(data, Crossed)$L, na.rm = TRUE), 
                      digits = 2)
   }else{
     Mean_SL <- NA
