@@ -55,7 +55,7 @@
 #' Example permdata 
 #' 
 #' Example permdata object, as the result of running the examples in the 
-#' prepPermeability  function.
+#' prepPermeability function.
 #'
 #' @usage 
 #' data(example_permdata)
@@ -67,7 +67,7 @@
 #' Example crossing table
 #' 
 #' Example crossing table, as the result of running the examples in the 
-#' BuildCrossingTable function.
+#' \code{\link{buildCrossingTable}} function.
 #'
 #' @usage 
 #' data(example_cT)

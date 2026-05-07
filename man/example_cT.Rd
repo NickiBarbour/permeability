@@ -12,7 +12,7 @@ data(example_cT)
 }
 \description{
 Example crossing table, as the result of running the examples in the
-BuildCrossingTable function.
+\code{\link{buildCrossingTable}} function.
 }
 \examples{
 library(sf);library(mapview);library(dplyr)
