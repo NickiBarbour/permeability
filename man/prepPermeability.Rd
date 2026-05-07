@@ -9,6 +9,7 @@ prepPermeability(
   barrier,
   sample.rate,
   sample.rate.tolerance = NULL,
+  sample.rate.units = "hours",
   buffer.m = NULL,
   barrier.covar.values = NULL,
   move.covar.names = NULL,
@@ -29,7 +30,8 @@ and any covariate(s)}
 coordinates (X, Y) and \code{line_id}, with a unique numeric value for each line
 segment.}
 
-\item{sample.rate}{regular desired sample rate (in hours) of input data.
+\item{sample.rate}{regular desired sample rate (default in hours) of input
+data.
 This is an important assumption of the package. Steps with an irregular
 sample rate will not be used to create the crossing table. It's the user's
 responsibility to ensure a (mostly) regular sample rate (some missing steps
@@ -37,8 +39,12 @@ are tolerable as they simply not be used but you need enough data to
 robustly estimate permeability) for their data prior
 to uploading it to the package functions.}
 
-\item{sample.rate.tolerance}{tolerance level for sample rate (in hours) -
-defaults to 1 hour if \code{sample.rate.tolerance = NULL}.}
+\item{sample.rate.tolerance}{tolerance level for sample rate  - defaults to
++/- 1 time unit around the sample rate if \code{sample.rate.tolerance = NULL}.}
+
+\item{sample.rate.units}{units of sample rate and tolerance arguments.
+Default in hours but can also specify any units available to the
+\code{difftime} function in base R (e.g., "secs","mins", "days","weeks").}
 
 \item{buffer.m}{If NULL (default) will be set to the max distance from the
 barrier observed for steps that cross. Can optionally also be set to a
@@ -70,7 +76,7 @@ barrier or not}
 very large datasets)}
 
 \item{n.cores}{numbers of cores to use if running in parallel.  Defaults to
-80\% of the number of available cores.}
+50\% of the number of available cores.}
 }
 \value{
 \code{permdata} object, which is a list containing two "stepwise" data

@@ -9,4 +9,4 @@ VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Depends: sf, circular, kableExtra, MASS, dplyr, mgcv, knitr
 Suggests: future.apply, plyr, ggplot2, ggspatial, mapview, basemaps, viridis, lubridate, prettymapr
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3

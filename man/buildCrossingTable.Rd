@@ -23,7 +23,7 @@ dataframes for the movement track(s) and barrier (\code{track} and \code{barrier
 very large datasets)}
 
 \item{n.cores}{numbers of cores to use if running in parallel.  Defaults to
-80\% of the number of available cores.}
+50\% of the number of available cores.}
 
 \item{n.null}{number of null steps to simulate around each observed
 step - default 60}
