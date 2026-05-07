@@ -1,6 +1,6 @@
 ---
 title: "Using `permeability` to estimate linear barrier permeability"
-author: "*anonymous for manuscript review*"
+author: "Nicole Barbour and Eliezer Gurarie"
 date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
@@ -64,7 +64,7 @@ The probability at time *t* that an animal crosses a given barrier is given by:
 
 $$c_t(Z_t, B, \kappa) = 1 - s_0(Z_t, B)^\kappa$$
 
-where $s_0(\cdot) = 1 - c_0(\cdot)$ is the null probability that the animal "stays" (does not cross barrier $B$ from location $Z_t$).  This formulation has the desired properties: when $\kappa = 0$, the probability of crossing is 0, when $\kappa = 1$, the probability of crossing is the null probability $c_0 = 1-s_0$. As $\kappa$ approaches infinity, the probability of crossing approaches 1.
+where $s_0(\cdot) = 1 - c_0(\cdot)$ is the null probability that the animal "stays" (does not cross barrier $B$ from location $Z_t$).  This formulation has the desired properties: when $\kappa = 0$, the probability of crossing is 0, when $\kappa = 1$, the probability of crossing equals the null probability $c_0 = 1-s_0$. As $\kappa$ approaches infinity, the probability of crossing approaches 1.
 
 Thus, given a set of $k$ null steps $\vec{S_i}$ where $i \in \{1,2,...,k\}$ we take each location of interest $Z_t$, add the steps $S_i$, and simply count the number of relocations on either side of the barrier $B$.
 
@@ -1310,16 +1310,13 @@ This tool especially serves as a useful method for quantifying permeability with
 
 If you use our package in publications, please be sure to cite it as:
 
-*Note: will be available upon publication on CRAN*
-
-```{r eval = FALSE}
-citation("permeability")
-```
+Barbour N., Gurarie E., Kelly A., and Hodson J. 2026. The permeability R package: A maximum-likelihood tool to quantify the permeability of linear barriers to animal movement. *Methods in Ecology and Evolution*.
 
 
 Report any issues or bugs to the package developers:
 
-(Anonymous)
+* Nicole Barbour (Main Contact), nbarbour@towson.edu
+* Eliezer Gurarie (Secondary Contact), egurarie@esf.edu
 
 # Acknowledgements
 
