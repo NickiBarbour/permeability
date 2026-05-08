@@ -16,7 +16,7 @@ To install and load the package and vignette:
 
 ```
 library(devtools)
-install_github("https://github.com/barb3800/permeability", build_vignettes = TRUE)
+install_github("https://github.com/NickiBarbour/permeability", build_vignettes = TRUE)
 library(permeability)
 browseVignettes("permeability")
 ```
