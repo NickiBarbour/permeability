@@ -1153,17 +1153,23 @@ The package can be installed using `devtools` with:
 devtools::install_github("wx-ecology/BaBA")
 ```
 
-```{r}
+```{r eval = FALSE}
 library(BaBA)
 ```
 
 
 Data from the `BaBA` package for the pronghorn (n = 2) and associated fence network can be loaded with the `data` function. 
 
-```{r}
+```{r eval = FALSE}
 data("pronghorn")
 data("fences")
 ```
+
+```{r echo = FALSE}
+load("./data/pronghorn.rda")
+load("./data/fences.rda")
+```
+
 
 ```{r}
 str(pronghorn)
