@@ -12,7 +12,7 @@ data(example_permdata)
 }
 \description{
 Example permdata object, as the result of running the examples in the
-prepPermeability  function.
+prepPermeability function.
 }
 \examples{
 library(sf);library(mapview);library(dplyr)
