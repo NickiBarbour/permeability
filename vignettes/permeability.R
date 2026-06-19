@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
 
 ## ----package, eval = FALSE----------------------------------------------------
 # library(devtools)
-# install_github("pathprovidedonpublication", vignettes = TRUE)
+# install_github("NickiBarbour/permeability", vignettes = TRUE)
 # library(permeability)
 
 ## ----simtrack1, fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE----
@@ -271,8 +271,8 @@ plotCrossings(permdata = bor_format,
               barrier.sf = hwy1_west,
               interactive.map = TRUE)
 
-## ----mappingpackages2, eval = TRUE--------------------------------------------
-library(ggspatial);library(ggplot2);library(prettymapr)
+## ----mappingpackages2, eval = FALSE-------------------------------------------
+# library(ggspatial);library(ggplot2);library(prettymapr)
 
 ## ----plotcrossings2, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE----
 # crossing_map <- plotCrossings(permdata = bor_format,
@@ -571,10 +571,10 @@ prediction <- predict(season_model, new.data = predict_kappa, se.fit = TRUE)
 predict_kappa <- cbind(predict_kappa, prediction)
 predict_kappa
 
-## ----plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6----
-ggplot(data = predict_kappa, aes(x = Month, y = kappa.hat)) +
-  geom_point(size=2, position = position_dodge(width = 1)) +
-  geom_errorbar(aes(ymin = ci.low, ymax = ci.high), linewidth=1, position = position_dodge(width = 1)) +
-  theme_classic() + xlab(" ")+ ylab("Predicted Kappa") +
-  scale_x_discrete(labels=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
+## ----plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE----
+# ggplot(data = predict_kappa, aes(x = Month, y = kappa.hat)) +
+#   geom_point(size=2, position = position_dodge(width = 1)) +
+#   geom_errorbar(aes(ymin = ci.low, ymax = ci.high), linewidth=1, position = position_dodge(width = 1)) +
+#   theme_classic() + xlab(" ")+ ylab("Predicted Kappa") +
+#   scale_x_discrete(labels=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
 

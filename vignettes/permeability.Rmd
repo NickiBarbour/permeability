@@ -44,7 +44,7 @@ To load the package:
 
 ```{r package, eval = FALSE}
 library(devtools)
-install_github("pathprovidedonpublication", vignettes = TRUE)
+install_github("NickiBarbour/permeability", vignettes = TRUE)
 library(permeability)
 ```
 
@@ -742,7 +742,7 @@ plotCrossings(permdata = bor_format,
 ```
 
 
-```{r mappingpackages2, eval = TRUE}
+```{r mappingpackages2, eval = FALSE}
 library(ggspatial);library(ggplot2);library(prettymapr)
 ```
 
@@ -1296,13 +1296,15 @@ predict_kappa <- cbind(predict_kappa, prediction)
 predict_kappa
 ```
 
-```{r plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6}
+```{r plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE}
 ggplot(data = predict_kappa, aes(x = Month, y = kappa.hat)) +
   geom_point(size=2, position = position_dodge(width = 1)) +
   geom_errorbar(aes(ymin = ci.low, ymax = ci.high), linewidth=1, position = position_dodge(width = 1)) +
   theme_classic() + xlab(" ")+ ylab("Predicted Kappa") +
   scale_x_discrete(labels=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
 ```
+
+![](figures/pronghorn_perm.png)
 
 According to these predictions, fence permeability is highest for this one pronghorn in May and November. The monthly differences indicate a seasonal spline may be appropriate.
 
