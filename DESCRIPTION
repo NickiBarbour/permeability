@@ -7,6 +7,6 @@ License: PRIVATE
 Encoding: UTF-8
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-Depends: sf, circular, kableExtra, MASS, dplyr, mgcv, knitr, mapview
-Suggests: future.apply, plyr, ggplot2, ggspatial, basemaps, viridis, lubridate, prettymapr
+Depends: sf, circular, kableExtra, MASS, dplyr, mgcv, knitr
+Suggests: future.apply, plyr, ggplot2, ggspatial, mapview, basemaps, viridis, lubridate, prettymapr
 RoxygenNote: 7.3.3

@@ -262,14 +262,14 @@ summary(bor_format)
 ## ----plotcrossingsbasic, fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE----
 # plotCrossings(permdata = bor_format)
 
-## ----mappingpackages, eval = TRUE---------------------------------------------
-library(mapview)
+## ----mappingpackages, eval = FALSE--------------------------------------------
+# library(mapview)
 
-## ----plotcrossings, fig.align = "center", fig.width = 6, fig.height=6, eval = TRUE----
-plotCrossings(permdata = bor_format, 
-              original.data = boreal_caribou,
-              barrier.sf = hwy1_west,
-              interactive.map = TRUE)
+## ----plotcrossings, fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE----
+# plotCrossings(permdata = bor_format,
+#               original.data = boreal_caribou,
+#               barrier.sf = hwy1_west,
+#               interactive.map = TRUE)
 
 ## ----mappingpackages2, eval = FALSE-------------------------------------------
 # library(ggspatial);library(ggplot2);library(prettymapr)
@@ -497,25 +497,26 @@ str(pronghorn)
 ## -----------------------------------------------------------------------------
 str(fences)
 
-## -----------------------------------------------------------------------------
+## ----warning = FALSE----------------------------------------------------------
 fences2 <- fences |> 
   st_cast("LINESTRING")
 
-## ----fig.align = "center", fig.width = 6, fig.height=6------------------------
-pronghorn_tracks <- pronghorn |>
-  dplyr::group_by(Animal.ID) |>
-  dplyr::summarize(do_union = FALSE) |>
-  sf::st_cast("LINESTRING")
-
-mapview(pronghorn_tracks, zcol="Animal.ID") +
-  mapview(fences, color = "red")
+## ----fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE----------
+# pronghorn_tracks <- pronghorn |>
+#   dplyr::group_by(Animal.ID) |>
+#   dplyr::summarize(do_union = FALSE) |>
+#   sf::st_cast("LINESTRING")
+# 
+# library(mapview)
+# 
+# mapview(pronghorn_tracks, zcol="Animal.ID") +
+#   mapview(fences, color = "red")
 
 ## ----fig.align = "center", fig.width = 6, fig.height=6------------------------
 sample.rate <- pronghorn |> 
   dplyr::group_by(Animal.ID) |>
   dplyr::mutate(dtime = c(0,round(difftime(date[-1], date[-length(date)], units ="hours")))) |>
-  data.frame() |>
-  ungroup()
+  data.frame() 
 
 barplot(table(sample.rate$dtime))
 
@@ -524,9 +525,9 @@ pronghorn$X <- st_coordinates(pronghorn)[,1]
 pronghorn$Y <- st_coordinates(pronghorn)[,2]
 pronghorn_df <- pronghorn |>
   data.frame() |>
-  mutate(ID = as.character(Animal.ID), Time = date) |>
-  mutate(Month = format(Time, "%m")) |>
-  select(ID, Time, X, Y, Month)
+  dplyr::mutate(ID = as.character(Animal.ID), Time = date) |>
+  dplyr::mutate(Month = format(Time, "%m")) |>
+  dplyr::select(ID, Time, X, Y, Month)
 
 ## ----eval = FALSE-------------------------------------------------------------
 # prong_format <- prepPermeability(move.df = subset(pronghorn_df, ID == "103_2014"),
@@ -572,6 +573,9 @@ predict_kappa <- cbind(predict_kappa, prediction)
 predict_kappa
 
 ## ----plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE----
+# 
+# library(ggplot2)
+# 
 # ggplot(data = predict_kappa, aes(x = Month, y = kappa.hat)) +
 #   geom_point(size=2, position = position_dodge(width = 1)) +
 #   geom_errorbar(aes(ymin = ci.low, ymax = ci.high), linewidth=1, position = position_dodge(width = 1)) +

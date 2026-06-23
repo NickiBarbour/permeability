@@ -1,5 +1,5 @@
 ---
-title: "Using `permeability` to estimate linear barrier permeability"
+title: "permeability"
 author: "Nicole Barbour and Eliezer Gurarie"
 date: "`r Sys.Date()`"
 output: 
@@ -728,18 +728,20 @@ More advanced options for `plotCrossings` include an interactive map (`interacti
 
 
 
-```{r mappingpackages, eval = TRUE}
+```{r mappingpackages, eval = FALSE}
 library(mapview)
 ```
 
 Importantly, to use the interactive and static options for `plotCrossings`, the user also needs to provide the original data and the `sf` version of the barrier, for spatial mapping.
 
-```{r plotcrossings, fig.align = "center", fig.width = 6, fig.height=6, eval = TRUE}
+```{r plotcrossings, fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE}
 plotCrossings(permdata = bor_format, 
               original.data = boreal_caribou,
               barrier.sf = hwy1_west,
               interactive.map = TRUE)
 ```
+
+![](figures/mapview_map.png)
 
 
 ```{r mappingpackages2, eval = FALSE}
@@ -1181,22 +1183,27 @@ str(fences)
 
 The `fences` object is a MULTILINESTRING currently, it's converted to a LINESTRING format.
 
-```{r}
+```{r warning = FALSE}
 fences2 <- fences |> 
   st_cast("LINESTRING")
 ```
 
 The pronghorn locations can be easily transformed into spatial lines to visualize the tracks with the fence network.
 
-```{r fig.align = "center", fig.width = 6, fig.height=6}
+```{r fig.align = "center", fig.width = 6, fig.height=6, eval = FALSE}
 pronghorn_tracks <- pronghorn |>
   dplyr::group_by(Animal.ID) |>
   dplyr::summarize(do_union = FALSE) |>
   sf::st_cast("LINESTRING")
 
+library(mapview)
+
 mapview(pronghorn_tracks, zcol="Animal.ID") +
   mapview(fences, color = "red")
 ```
+
+![](figures/mapview_map_pronghorn.png)
+
 
 The sample rate is assessed by finding the difference in time between consecutive observations for each pronghorn. The median sample rate is at 2 hours.
 
@@ -1204,8 +1211,7 @@ The sample rate is assessed by finding the difference in time between consecutiv
 sample.rate <- pronghorn |> 
   dplyr::group_by(Animal.ID) |>
   dplyr::mutate(dtime = c(0,round(difftime(date[-1], date[-length(date)], units ="hours")))) |>
-  data.frame() |>
-  ungroup()
+  data.frame() 
 
 barplot(table(sample.rate$dtime))
 ```
@@ -1217,9 +1223,9 @@ pronghorn$X <- st_coordinates(pronghorn)[,1]
 pronghorn$Y <- st_coordinates(pronghorn)[,2]
 pronghorn_df <- pronghorn |>
   data.frame() |>
-  mutate(ID = as.character(Animal.ID), Time = date) |>
-  mutate(Month = format(Time, "%m")) |>
-  select(ID, Time, X, Y, Month)
+  dplyr::mutate(ID = as.character(Animal.ID), Time = date) |>
+  dplyr::mutate(Month = format(Time, "%m")) |>
+  dplyr::select(ID, Time, X, Y, Month)
 ```
 
 As example, the `prepPermeability` function is applied to just one individual, "103_2014".
@@ -1297,6 +1303,9 @@ predict_kappa
 ```
 
 ```{r plotprongpredictions, fig.align = "center", fig.width = 8, fig.height=6, eval = FALSE}
+
+library(ggplot2)
+
 ggplot(data = predict_kappa, aes(x = Month, y = kappa.hat)) +
   geom_point(size=2, position = position_dodge(width = 1)) +
   geom_errorbar(aes(ymin = ci.low, ymax = ci.high), linewidth=1, position = position_dodge(width = 1)) +
