@@ -1102,11 +1102,11 @@ Here, we show an example predicting $\kappa$ values as a function of `km` along 
 hwy1_west_z <- hwy1_west_xy[,1] + 1i*hwy1_west_xy[,2]
 predictions <- cbind(hwy1_west_xy, hwy1_west_z) |> 
   data.frame() |>
-  group_by(line_id) |>
-  reframe(km = Mod(diff(hwy1_west_z))) |>
-  select(km) |>
-  mutate(km = cumsum(km)/1000) |>
-  mutate(barrier.id = 1:length(km)) |>
+  dplyr::group_by(line_id) |>
+  dplyr::reframe(km = Mod(diff(hwy1_west_z))) |>
+  dplyr::select(km) |>
+  dplyr::mutate(km = cumsum(km)/1000) |>
+  dplyr::mutate(barrier.id = 1:length(km)) |>
   data.frame() |>
   subset(barrier.id %in%  # make predictions only for barrier segments in crossing table (crossings possible)
            seq(min(bor_cT$barrier.id), max(bor_cT$barrier.id, by = 1)))
