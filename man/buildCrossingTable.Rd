@@ -73,12 +73,16 @@ need to annotate the output crossing table from this function with their
 desired covariates.
 }
 \examples{
-require(permeability)
+library(permeability)
 
 data("example_permdata")
 data("traffic_data")
 
-# build crossing table
+# permdata object created with prepPermeability
+print(example_permdata)
+
+\donttest{
+# build crossing table (can take a minute)
 example_cT <- buildCrossingTable(permdata = example_permdata,
                                  verbose = TRUE)
 
@@ -104,4 +108,5 @@ example_cT4 <- merge(example_cT3, traffic_data, by = "Date", all.x = TRUE) |>
   unique()
 
 str(example_cT4)
+}
 }

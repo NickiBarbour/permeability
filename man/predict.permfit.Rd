@@ -5,32 +5,38 @@
 \title{Prediction method for permeability fit}
 \usage{
 \method{predict}{permfit}(
-  fit,
+  object,
   new.data = NULL,
   se.fit = TRUE,
   conf.level = 0.95,
   bootstrap = FALSE,
   bootstrap.n = 1000,
-  parallel = FALSE
+  parallel = FALSE,
+  ...
 )
 }
 \arguments{
-\item{fit}{permeability fit object, output of \link{`fitPermeability`}}
+\item{object}{permeability fit object, output of \code{\link{fitPermeability}}}
 
 \item{new.data}{an optional data frame if predictions are needed over new
 values.}
+
+\item{se.fit}{whether to also return standard errors (as 95\% confidence
+intervals) on the estimates. Defaults to TRUE.}
 
 \item{conf.level}{confidence level (default 95\%) .}
 
 \item{bootstrap}{whether to get standard errors on estimates using
 bootstrapping. Recommended if there are issues getting standard errors with
-the Hessian with \link{`fitPermeability`}.}
+the Hessian with \code{\link{fitPermeability}}.}
 
 \item{bootstrap.n}{number of iterations to run the bootstrapping for, if
 selected. Defaults to 1000.}
 
 \item{parallel}{if bootstrap = TRUE, whether to run in parallel using the
 future.apply package or not. Recommended (bootstrapping can take 10+ min).}
+
+\item{...}{currently unused (for consistency with the generic).}
 }
 \value{
 data frame with columns \code{kappa.hat} - point estimate of

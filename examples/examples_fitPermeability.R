@@ -1,4 +1,4 @@
-require(permeability)
+library(permeability)
 data("example_cT")
 
 # NULL MODEL ###########################################
@@ -10,11 +10,10 @@ print(null_model)
 ## fixed effect
 traffic_model <- fitPermeability(~ traffic_volume, data = example_cT)
 
-## get predictions with 95% CI using bootstrapping
+## get predictions with 95% CI
 predict_kappa <- predict(traffic_model, se.fit = TRUE)
 predict_kappa$traffic_volume <- traffic_model$data$traffic_volume
-predict_kappa <- predict_kappa |>
-  dplyr::arrange(kappa.hat)
+predict_kappa <- predict_kappa[order(predict_kappa$kappa.hat), ]
 
 plot(predict_kappa$traffic_volume, predict_kappa$kappa.hat, type = "l", 
      xlab = "Daily Traffic Volume", 
@@ -22,13 +21,16 @@ plot(predict_kappa$traffic_volume, predict_kappa$kappa.hat, type = "l",
      col ="orange", lwd = 2)
 
 ## day of year smoother
-example_cT$doy <- lubridate::yday(example_cT$Date)
+example_cT$doy <- as.numeric(format(example_cT$Date, "%j"))
 doy_model <- fitPermeability(~ s(doy, k = 6, bs = "cc"), data = example_cT)
 doy_model
 
+\donttest{
+## bootstrapped confidence intervals (use bootstrap.n = 1000 or more for 
+## real analyses; reduced here for speed)
+doy_values <- data.frame(doy = seq(min(example_cT$doy), 
+                                   max(example_cT$doy), by = 1))
 predict_kappa <- predict(doy_model, se.fit = TRUE, bootstrap = TRUE,
-                         new.data = data.frame(doy = seq(min(example_cT$doy),
-                                                         max(example_cT$doy),
-                                                         by = 1)))
-predict_kappa$doy <- seq(min(example_cT$doy), max(example_cT$doy),
-                         by = 1)
+                         bootstrap.n = 50, new.data = doy_values)
+predict_kappa$doy <- doy_values$doy
+}

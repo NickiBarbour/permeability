@@ -13,7 +13,9 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-require(permeability)
+library(permeability)
+library(sf)
+library(dplyr)
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = ">",
@@ -531,7 +533,7 @@ str(hwy1_west)
 X and Y coordinates can be extracted from the `sf` object and converted to a matrix using the `st_coordinates` function. These coordinates will form the "segments" of the barrier, which will be used with other functions to determine if they each intersect with animal movement steps or not.
 
 ```{r headbarrier}
-hwy1_west_xy <- st_coordinates(hwy1_west)
+hwy1_west_xy <- sf::st_coordinates(hwy1_west)
 head(hwy1_west_xy)
 ```
 
@@ -1219,8 +1221,8 @@ barplot(table(sample.rate$dtime))
 The pronghorn data is further formatted for `permeability` by converting to a data frame format and adding the coordinates and the month as columns.
 
 ```{r}
-pronghorn$X <- st_coordinates(pronghorn)[,1]
-pronghorn$Y <- st_coordinates(pronghorn)[,2]
+pronghorn$X <- sf::st_coordinates(pronghorn)[,1]
+pronghorn$Y <- sf::st_coordinates(pronghorn)[,2]
 pronghorn_df <- pronghorn |>
   data.frame() |>
   dplyr::mutate(ID = as.character(Animal.ID), Time = date) |>

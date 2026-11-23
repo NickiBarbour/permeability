@@ -162,8 +162,10 @@ simulatePermeability <- function(xmax = 50, ymax = 50,
     # make list of ids to loop through
     list <- c(1:n.tracks)
     if(parallel){
-      n_cores <- round(parallel::detectCores()*0.80) # use 80% of cores
-      plan(multisession, workers = n_cores)
+      check_future()
+      n_cores <- set_workers(0.80) # use 80% of cores
+      oplan <- future::plan(future::multisession, workers = n_cores)
+      on.exit(future::plan(oplan), add = TRUE)
       data_list <- future.apply::future_lapply(list, 
                                FUN = simulatePermeability_individual,
                                future.seed = TRUE,
@@ -178,7 +180,6 @@ simulatePermeability <- function(xmax = 50, ymax = 50,
                                target.location = target.location,
                                plot.track = plot.track, 
                                kappa = kappa)
-      plan(sequential)
       
     }else{
       data_list <- lapply(list,
@@ -245,7 +246,6 @@ simulatePermeability <- function(xmax = 50, ymax = 50,
   return(permdata)
 }
 
-#' @export
 simulatePermeability_individual <- function(track.id = 1,
                                             barrier_df,
                                             N.steps, 
@@ -273,7 +273,7 @@ simulatePermeability_individual <- function(track.id = 1,
   
   # check for covariate-version of kappa:
   if(is.null(kappa)){
-    kappa <- barrier_step_df$kappa
+    kappa <- barrier_df$kappa
   }
   
   # set empty vector of locs for track, Z
@@ -288,12 +288,12 @@ simulatePermeability_individual <- function(track.id = 1,
   for(i in 1:(N-1)){
     if(i > 1) Phi <- Arg(Z[i] - Z[i-1]) 
     if(type == "bcrw"){
-      Z.new.options <- Z[i] + complex(arg = Arg(target.location - Z[i]) + 
+      Z.new.options <- Z[i] + complex(argument = Arg(target.location - Z[i]) + 
                                         sample(angles, n.null), 
-                                      mod = sample(steps, n.null))
+                                      modulus = sample(steps, n.null))
     }else{
-      Z.new.options <- Z[i] + complex(arg = Phi + sample(angles, n.null), 
-                                      mod = sample(steps, n.null))
+      Z.new.options <- Z[i] + complex(argument = Phi + sample(angles, n.null), 
+                                      modulus = sample(steps, n.null))
         
     }
     findZnew <- function(Z.new.options, step.barrier, kappa){
@@ -337,12 +337,12 @@ simulatePermeability_individual <- function(track.id = 1,
           Re(Z.new) > xmax | Re(Z.new) < -xmax){
       
       if(type == "bcrw"){
-        Z.new.options <- Z[i] + complex(arg = Arg(target.location - Z[i]) + 
+        Z.new.options <- Z[i] + complex(argument = Arg(target.location - Z[i]) + 
                                           sample(angles, n.null), 
-                                        mod = sample(steps, n.null))
+                                        modulus = sample(steps, n.null))
       }else{
-        Z.new.options <- Z[i] + complex(arg = Phi + sample(angles, n.null), 
-                                        mod = sample(steps, n.null))
+        Z.new.options <- Z[i] + complex(argument = Phi + sample(angles, n.null), 
+                                        modulus = sample(steps, n.null))
       }
       Z.new <-  findZnew(Z.new.options, step.barrier, kappa)
     }
@@ -445,34 +445,15 @@ simulatePermeability_individual <- function(track.id = 1,
 }
 
 
-#' @export
 reflectStep <- function(z1, z2){
   z.intersect <- findSegmentIntersection(z1,z2)
   z1.intersect <- c(z1[1], z.intersect)
   z1.otherside <- c(z.intersect, z1[2])
   arg.reflect <- 2 * Arg(diff(z2)) - Arg(diff(z1))
   c(z.intersect, 
-    z.intersect + complex(arg = arg.reflect, mod = Mod(diff(z1.otherside))))
+    z.intersect + complex(argument = arg.reflect, modulus = Mod(diff(z1.otherside))))
 }
 
-#' @export
-isIntersect <- function(z1, z2){
-  theta <- Arg(z1[2]-z1[1])
-  z1.t <- (z1-z1[1]) * exp(-1i*theta)
-  z2.t <- (z2-z1[1]) * exp(-1i*theta)
-  slope.r <- (Re(z2.t[2]) - Re(z2.t[1]))/(Im(z2.t[2]) - Im(z2.t[1]))
-  x.intercept <-  Re(z2.t[1]) - slope.r * Im(z2.t[1])
-  intersect.x <- x.intercept > 0 & x.intercept < Re(z1.t[2])
-  intersect.x & (Im(z2.t[2]) * Im(z2.t[1])) < 0
-}
-
-#' @export
-getClosest <- function(z1, z2){
-  D <- outer(z1, z2, function(z1,z2) Mod(z1-z2))
-  apply(D, 1, min)
-}
-
-#' @export
 findSegmentIntersection <- function(z1, z2){
   theta <- Arg(z1[2]-z1[1])
   z1.t <- (z1-z1[1]) * exp(-1i*theta)
@@ -480,5 +461,5 @@ findSegmentIntersection <- function(z1, z2){
   intersect <- (prod(Im(z2.t)) < 0) & 
     (any(Re(z2.t) < Re(z1.t[2])) & any(Re(z2.t) > Re(z1.t[1])))
   crossing.t <-  Re(z2.t[1]) - (diff(Re(z2.t))/diff(Im(z2.t))) * Im(z2.t[1])
-  crossing.t * complex(mod = 1, arg = theta)  + z1[1]
+  crossing.t * complex(modulus = 1, argument = theta)  + z1[1]
 }

@@ -1,8 +1,8 @@
-require(permeability)
-require(ggplot2)
-require(ggspatial)
-require(mapview)
-require(basemaps)
+library(permeability)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(ggspatial)
 
 data("example_id")
 data("example_cT")
@@ -26,7 +26,7 @@ predictions <- cbind(hwy1_w_xy, hwy1_w_z) |>
   mutate(barrier.id = 1:length(km)) |>
   data.frame() |>
   subset(barrier.id %in%  # make predictions for barrier segments in cT
-           seq(min(example_cT$barrier.id), max(example_cT$barrier.id, by = 1)))
+           seq(min(example_cT$barrier.id), max(example_cT$barrier.id), by = 1))
 
 predictions$kappa.hat <- predict(hwy1_w_model, se.fit = FALSE, 
                                  new.data = predictions)[,1]
@@ -40,13 +40,18 @@ example_sf <- example_id |>
 map <- mapPredictions(predictions, barrier.sf = hwy1_west,
                       tracks.sf = example_sf)
 
+\donttest{
 # static map (with basemap) --------------------------------------------
-## default - landscape from ESRI and basemaps package
-map <- mapPredictions(predictions, barrier.sf = hwy1_west, 
-                      add.basemap = TRUE)
-map
+## default - landscape from ESRI and basemaps package (requires internet)
+if(requireNamespace("basemaps", quietly = TRUE)){
+  map <- mapPredictions(predictions, barrier.sf = hwy1_west, 
+                        add.basemap = TRUE)
+  map
+}
 
 # interactive map ------------------------------------------------------
-mapPredictions(predictions, barrier.sf = hwy1_west,
-               interactive = TRUE)
-
+if(requireNamespace("mapview", quietly = TRUE)){
+  mapPredictions(predictions, barrier.sf = hwy1_west,
+                 interactive = TRUE)
+}
+}

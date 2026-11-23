@@ -1,23 +1,27 @@
 #' Prediction method for permeability fit 
 #' 
-#' @param fit permeability fit object, output of \link{`fitPermeability`}
+#' @param object permeability fit object, output of \code{\link{fitPermeability}}
 #' @param new.data an optional data frame if predictions are needed over new 
 #' values.
+#' @param se.fit whether to also return standard errors (as 95% confidence
+#' intervals) on the estimates. Defaults to TRUE.
 #' @param conf.level confidence level (default 95%) .
 #' @param bootstrap whether to get standard errors on estimates using 
 #' bootstrapping. Recommended if there are issues getting standard errors with
-#' the Hessian with \link{`fitPermeability`}. 
+#' the Hessian with \code{\link{fitPermeability}}. 
 #' @param bootstrap.n number of iterations to run the bootstrapping for, if 
 #' selected. Defaults to 1000.
 #' @param parallel if bootstrap = TRUE, whether to run in parallel using the
 #' future.apply package or not. Recommended (bootstrapping can take 10+ min).
+#' @param ... currently unused (for consistency with the generic).
 #' @returns data frame with columns `kappa.hat` - point estimate of 
 #' permeability, 
 #' `ci.low` and `ci.high` - confidence intervals around the kappa estimate
 #' @export
-predict.permfit <- function(fit, new.data = NULL, se.fit = TRUE, 
+predict.permfit <- function(object, new.data = NULL, se.fit = TRUE, 
                             conf.level = 0.95, bootstrap = FALSE, 
-                            bootstrap.n = 1000, parallel = FALSE) {
+                            bootstrap.n = 1000, parallel = FALSE, ...) {
+  fit <- object
   formula <- fit$formula
   if(se.fit){
     beta.hat <- suppressWarnings(data.frame(estimate = fit$optim.output$par, 
@@ -91,27 +95,28 @@ predict.permfit <- function(fit, new.data = NULL, se.fit = TRUE,
         }
         iterations <- bootstrap.n
         if(parallel){
-          n_cores <- round(parallel::detectCores()*0.80)
+          check_future()
+          n_cores <- set_workers(0.80)
           message(paste("Running bootstrap using", iterations, "iterations and",
                         n_cores,"cores (80% of available).", sep=" "))
           
           if(is.null(new.data)){
-            plan(multisession, workers = n_cores)
-            predict.bs <- future_sapply(
+            oplan <- future::plan(future::multisession, workers = n_cores)
+            on.exit(future::plan(oplan), add = TRUE)
+            predict.bs <- future.apply::future_sapply(
               1:iterations,
               function(i) try(runBootstrap(i, 
                                        model_formula = formula,
                                        og_data = fit$data)), future.seed = TRUE)
-            plan(sequential)
           }else{
-            plan(multisession, workers = n_cores)
-            predict.bs <- future_sapply(
+            oplan <- future::plan(future::multisession, workers = n_cores)
+            on.exit(future::plan(oplan), add = TRUE)
+            predict.bs <- future.apply::future_sapply(
               1:iterations,
               function(i) try(runBootstrap(i, 
                                        model_formula = formula,
                                        og_data = fit$data,
                                        new_data = new.data)), future.seed = TRUE)
-            plan(sequential)
           }
         }else{
           warning(paste("Running bootstrap with", iterations,"iterations and without parallel processing. Adjust your expectations accordingly.", sep=" "))
@@ -199,7 +204,6 @@ predict.permfit <- function(fit, new.data = NULL, se.fit = TRUE,
 
 
 
-#' @export
 scaleX <- function(fit) {
   # Identify the intercept column (usually the first column in 
   ## model.matrix output)

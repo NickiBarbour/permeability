@@ -105,12 +105,12 @@ buildCrossingTable <- function(permdata, parallel = FALSE, n.cores = NULL,
     id_list <- split(df, df$ID)
     
     if(parallel){
-      if(is.null(n.cores)){
-        n.cores <- round(parallel::detectCores()*0.50) # use 50% of cores
-      } 
-      plan(multisession, workers = n.cores)
+      check_future()
+      n.cores <- set_workers(0.50, n.cores) # default: 50% of cores
+      oplan <- future::plan(future::multisession, workers = n.cores)
+      on.exit(future::plan(oplan), add = TRUE)
       if(verbose) message(paste(n.cores, "cores are being used: running in parallel."))
-      cT_list <- future_lapply(id_list, 
+      cT_list <- future.apply::future_lapply(id_list, 
                                FUN = buildCrossingTable_individual,
                                future.seed = TRUE,
                                barrier = barrier,
@@ -119,7 +119,6 @@ buildCrossingTable <- function(permdata, parallel = FALSE, n.cores = NULL,
                                turning.angles = turning.angles,
                                verbose = verbose,
                                mean_cross_SL = mean_cross_SL)
-      plan(sequential)
     }else{
       cT_list <- lapply(id_list, 
                         buildCrossingTable_individual,
@@ -279,7 +278,6 @@ buildCrossingTable_individual <- function(df, barrier, n.null,
 # null steps are simulated using provided step length distributions
 ## if null steps cross barrier, barrier segment that crossed the most
 ## is also extracted as "barrier.id"
-#' @export
 getCandidateCrosses <- function(my.step, df, step.barrier, n.null, 
                                 step.lengths, turning.angles,
                                 close_rows = NULL,
@@ -309,7 +307,7 @@ getCandidateCrosses <- function(my.step, df, step.barrier, n.null,
     # generate null steps
     step.candidate <- cbind(start = my.step$Z.start, 
                             end = my.step$Z.start + 
-                              complex(mod = Ls, arg = my.step$Phi + thetas))
+                              complex(modulus = Ls, argument = my.step$Phi + thetas))
   }else{
     Ls <- sample(step.lengths, n.null, replace = TRUE)
     
@@ -318,7 +316,7 @@ getCandidateCrosses <- function(my.step, df, step.barrier, n.null,
     # generate null steps
     step.candidate <- cbind(start = my.step$Z.start, 
                             end = my.step$Z.start + 
-                              complex(mod = Ls, arg = my.step$Phi + thetas))
+                              complex(modulus = Ls, argument = my.step$Phi + thetas))
   }
   if(plot_candidates){
     plot(step.candidate, col="white", type = "l")
@@ -365,19 +363,3 @@ getCandidateCrosses <- function(my.step, df, step.barrier, n.null,
                                   barrier.id = barrier.id))
 }
 
-#' @export
-getClosest <- function(z1, z2){
-  D <- outer(z1, z2, function(z1,z2) Mod(z1-z2))
-  apply(D, 1, min)
-}
-
-#' @export
-isIntersect <- function(z1, z2){
-  theta <- Arg(z1[2]-z1[1])
-  z1.t <- (z1-z1[1]) * exp(-1i*theta)
-  z2.t <- (z2-z1[1]) * exp(-1i*theta)
-  slope.r <- (Re(z2.t[2]) - Re(z2.t[1]))/(Im(z2.t[2]) - Im(z2.t[1]))
-  x.intercept <-  Re(z2.t[1]) - slope.r * Im(z2.t[1])
-  intersect.x <- x.intercept > 0 & x.intercept < Re(z1.t[2])
-  intersect.x & (Im(z2.t[2]) * Im(z2.t[1])) < 0
-}

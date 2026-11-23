@@ -1,4 +1,3 @@
-#' @export
 kappaLogLikelihood_1D <- function(par, data){
   
   crossed <- which(data[,"crossed"] == 1)
@@ -21,7 +20,6 @@ kappaLogLikelihood_1D <- function(par, data){
 }
 
 
-#' @export
 kappaLogLikelihood <- function(pars, data, X){
   
   crossed <- which(data[,"crossed"] == 1)
@@ -43,7 +41,6 @@ kappaLogLikelihood <- function(pars, data, X){
   sum(c(log(p_cross), log(p_stay))) 
 }
 
-#' @export
 expit <- function(x){
   exp(x)/(1+exp(x))
 }

@@ -116,9 +116,9 @@ plotCrossings <- function(permdata, original.data = NULL,
             summarize(do_union=FALSE) |> 
             st_cast("LINESTRING"))
           
-          map <- suppressWarnings(mapview(original_tracks, color = "darkgrey", legend = FALSE) +
-            mapview(steps_to_cross, color = "orange") +
-            mapview(barrier.sf, color = "black"))
+          map <- suppressWarnings(mapview::mapview(original_tracks, color = "darkgrey", legend = FALSE) +
+            mapview::mapview(steps_to_cross, color = "orange") +
+            mapview::mapview(barrier.sf, color = "black"))
           
           return(map)
         
@@ -149,7 +149,7 @@ plotCrossings <- function(permdata, original.data = NULL,
         if(add.basemap){
           
           map <- suppressMessages(ggplot() +
-            annotation_map_tile(type = 'osm', zoomin = -1) +
+            annotation_map_tile(type = 'osm', zoomin = -1, cachedir = tempdir()) +
             geom_sf(data = original_tracks_crop, color = "darkgrey", 
                     linewidth = 0.7) +
             geom_sf(data = barrier_crop, color = "black") +
@@ -245,9 +245,9 @@ plotCrossings_individual <- function(df_ID, barrier,
           summarize(do_union=FALSE) |> 
           st_cast("LINESTRING"))
         
-        map <- suppressWarnings(mapview(original_track, color = "darkgrey", legend = FALSE) +
-          mapview(step_to_cross, color = "orange") +
-          mapview(barrier, color = "black"))
+        map <- suppressWarnings(mapview::mapview(original_track, color = "darkgrey", legend = FALSE) +
+          mapview::mapview(step_to_cross, color = "orange") +
+          mapview::mapview(barrier, color = "black"))
         
         return(map)
       
@@ -273,7 +273,7 @@ plotCrossings_individual <- function(df_ID, barrier,
         if(add.basemap){
           
           map <- suppressMessages(ggplot() +
-            annotation_map_tile(type = 'osm', zoomin = -1) +
+            annotation_map_tile(type = 'osm', zoomin = -1, cachedir = tempdir()) +
             geom_sf(data = original_track_crop, color = "darkgrey", 
                     linewidth = 0.7) +
             geom_sf(data = barrier_crop, color = "black") +

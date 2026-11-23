@@ -14,7 +14,8 @@ data(example_id)
 Example caribou individual, for use in running package function examples.
 }
 \examples{
-library(sf);library(mapview);library(dplyr)
+library(sf)
+library(dplyr)
 
 # load caribou data
 data(boreal_caribou)
@@ -24,7 +25,7 @@ data(hwy1_west)
 
 # convert to sf structure
 boreal_caribou_sf <- st_as_sf(boreal_caribou, 
-                               coords = c("X","Y"), crs = 32611)
+                              coords = c("X","Y"), crs = 32611)
 
 # map track highway data
 boreal_tracks <- boreal_caribou_sf |> 
@@ -32,8 +33,13 @@ boreal_tracks <- boreal_caribou_sf |>
   summarize(do_union=FALSE) |> 
   st_cast("LINESTRING")
 
-mapview(boreal_tracks, zcol = "ID") + 
-  mapview(hwy1_west, color = "red")
+plot(st_geometry(boreal_tracks), col = "grey40")
+plot(st_geometry(hwy1_west), col = "red", lwd = 2, add = TRUE)
 
+# interactive map
+if(interactive() && requireNamespace("mapview", quietly = TRUE)){
+  mapview::mapview(boreal_tracks, zcol = "ID") + 
+    mapview::mapview(hwy1_west, color = "red")
+}
 }
 \keyword{data}

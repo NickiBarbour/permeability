@@ -9,7 +9,7 @@
 #' @param formula one-sided formula - uses names of columns in the crossing 
 #' table as possible covariates. Defaults to NULL (null model).
 #' @param data crossing table object - output of
-#'  \code{\link{build_crossingTable}}.
+#'  \code{\link{buildCrossingTable}}.
 #' @param beta0 optional parameter for initial values for model to be optimized
 #' over. Default NULL (see `optim` function for more details).
 #' @example examples/examples_fitPermeability.R
@@ -20,7 +20,7 @@ fitPermeability <- function(formula = ~1, data, beta0 = NULL){
   # base estimation of kappa
   if(formula == ~1){
     pars.fit <- suppressWarnings(optim(0, kappaLogLikelihood_1D, data = data,
-                      control = list(fnscale = -1), hessian = TRUE))
+                                       control = list(fnscale = -1), hessian = TRUE))
     if(pars.fit$hessian[,1]==0){
       se <- NA
       coef <-  data.frame(estimate = pars.fit$par, 
@@ -86,9 +86,9 @@ fitPermeability <- function(formula = ~1, data, beta0 = NULL){
     
     if(!is.null(beta0)) beta_init[1:length(beta0)] <- beta0
     pars.fit <- suppressWarnings(optim(beta_init, kappaLogLikelihood, 
-                      data = data, X = X.scaled,
-                      control=list(fnscale=-1),
-                      hessian = TRUE)) 
+                                       data = data, X = X.scaled,
+                                       control=list(fnscale=-1),
+                                       hessian = TRUE)) 
     
     se_try <- suppressWarnings(try(diag(sqrt(solve(-pars.fit$hessian))), 
                                    silent = TRUE))
@@ -109,7 +109,7 @@ fitPermeability <- function(formula = ~1, data, beta0 = NULL){
   
   coef$z_score = coef$estimate/coef$se 
   coef$p_value <- (1 - pnorm(abs(coef$z_score))) * 2
-
+  
   
   logLik <- pars.fit$value
   AIC <- -2*logLik + 2*nrow(coef)
@@ -126,7 +126,7 @@ fitPermeability <- function(formula = ~1, data, beta0 = NULL){
 
 
 #' @export
-print.permfit <- function(x){
+print.permfit <- function(x, ...){
   if(nrow(x$coef.table) == 1){
     kappa.hat <- predict(x)
     cat("\nEstimate of kappa (with 95% confidence intervals):\n")
@@ -149,7 +149,7 @@ print.permfit <- function(x){
         
         # fit null model to compare to
         null_model <- suppressWarnings(fitPermeability(~ 1, 
-                                      data = x$data))
+                                                       data = x$data))
         # find deviance for each model
         Dev0 <- -2*null_model$logLik
         Dev1 <- -2*x$logLik
@@ -188,7 +188,7 @@ print.permfit <- function(x){
         # fit null/linear model to compare to
         nonspline_formula <- as.formula(paste("~", nonspline_formula))
         null_model <- suppressWarnings(fitPermeability(nonspline_formula, 
-                                      data = x$data))
+                                                       data = x$data))
         # find deviance for each model
         Dev0 <- -2*null_model$logLik
         Dev1 <- -2*x$logLik
@@ -223,19 +223,19 @@ print.permfit <- function(x){
 }
 
 #' @export
-summary.permfit <- function(x){
-  list(coef = x$coef.table, logLik = x$logLik, AIC = x$AIC)
+summary.permfit <- function(object, ...){
+  list(coef = object$coef.table, logLik = object$logLik, AIC = object$AIC)
 }
 
 #' @export
-logLik.permfit <- function(x){
-  x$logLik
+logLik.permfit <- function(object, ...){
+  object$logLik
 }
 
 
 #' @export
-AIC.permfit <- function(x){
-  x$AIC
+AIC.permfit <- function(object, ..., k = 2){
+  object$AIC
 }
 
 

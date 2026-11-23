@@ -159,14 +159,14 @@ prepPermeability <- function(move.df, barrier,
     id_list <- split(df, df$ID)
     
     if(parallel){
-      if(is.null(n.cores)){
-        n.cores <- round(parallel::detectCores()*0.50) # use 50% of cores
-      } 
+      check_future()
+      n.cores <- set_workers(0.50, n.cores) # default: 50% of cores
       if(verbose) print(paste(n.cores, "cores are being used: running in parallel."))
       
-      plan(multisession, workers = n.cores)
+      oplan <- future::plan(future::multisession, workers = n.cores)
+      on.exit(future::plan(oplan), add = TRUE)
       
-      data_list <- future_lapply(id_list, 
+      data_list <- future.apply::future_lapply(id_list, 
                                  prepPermeability_individual,
                                  future.seed = TRUE,
                                  sample.rate = sample.rate,
@@ -177,7 +177,6 @@ prepPermeability <- function(move.df, barrier,
                                  barrier = barrier_step_df, 
                                  plot.track = plot.track, 
                                  verbose = verbose)
-      plan(sequential)
       
     }else{
       
@@ -472,13 +471,8 @@ prepPermeability_individual <- function(df, covar.names = NULL,
 
 
 #' @export
-getClosest <- function(z1, z2){
-  D <- outer(z1, z2, function(z1,z2) Mod(z1-z2))
-  apply(D, 1, min)
-}
-
-#' @export
-summary.permdata <- function(x){
+summary.permdata <- function(object, ...){
+  x <- object
   
   data <- subset(x$track, In.buffer & D.time %in% attr(x, "sample.rate"))
   
@@ -515,6 +509,6 @@ summary.permdata <- function(x){
 }
 
 #'@export
-print.permdata <- function(x){
+print.permdata <- function(x, ...){
   print(summary(x))
 }

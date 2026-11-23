@@ -1,12 +1,25 @@
 Package: permeability
-Title: Quantifying permeability of barriers for animal movement
-Version: 1.0.0.0
-Authors: Nicole Barbour and Eliezer Gurarie
-Description: This package estimates the permeability of a linear barrier for a set of tracking data, with the option to estimate permeability as a function of covariate(s). Package includes functions to format data, create a "crossing table" of null and actual animal crossings of a barrier, plot crossings, and fit permeability null and covariate models for model comparison and estimation of permeability.
-License: PRIVATE
+Title: Quantifying Permeability of Barriers for Animal Movement
+Version: 1.0.0
+Authors@R: c(
+    person("Nicole", "Barbour", email = "nbarbour@towson.edu",
+           role = c("aut", "cre")),
+    person("Eliezer", "Gurarie", role = "aut"))
+Description: Estimates the permeability of a linear barrier from animal
+    tracking data, with the option to model permeability as a function of
+    covariates. Includes functions to format data, build a 'crossing table'
+    of null and actual crossings of a barrier, plot crossings, and fit null
+    and covariate models for model comparison and estimation of permeability. 
+    For method details, see <doi:10.1111/2041-210x.70339>.
+License: GPL-3
+URL: https://github.com/NickiBarbour/permeability
+BugReports: https://github.com/NickiBarbour/permeability/issues
+LazyData: true
 Encoding: UTF-8
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-Depends: sf, circular, kableExtra, MASS, dplyr, mgcv, knitr
-Suggests: future.apply, plyr, ggplot2, ggspatial, mapview, basemaps, viridis, lubridate, prettymapr
 RoxygenNote: 7.3.3
+Depends: R (>= 4.1.0)
+Imports: sf, circular, MASS, dplyr, mgcv, ggplot2, ggspatial, plyr, parallel
+Suggests: knitr, rmarkdown, future, future.apply, mapview, basemaps,
+    viridis, lubridate, prettymapr

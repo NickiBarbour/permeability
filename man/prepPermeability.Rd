@@ -110,11 +110,16 @@ value for each barrier segment, these can be provided as a vector equal in
 length to the number of barrier segments.
 }
 \examples{
-require(permeability)
+library(permeability)
+library(sf)
+library(dplyr)
 
 data("example_id")
 data("hwy1_west")
 
+head(example_id)
+
+\donttest{
 # extract barrier coords (optional)
 hwy1_west_xy <- st_coordinates(hwy1_west)
 colnames(hwy1_west_xy) <- c("X","Y","line_id")
@@ -158,5 +163,5 @@ str(example_permdata)
 
 # print: shows summary of data
 print(example_permdata)
-
+}
 }

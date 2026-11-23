@@ -1,9 +1,9 @@
-require(permeability)
-require(lubridate)
+library(permeability)
 
 data("example_cT")
 
-example_cT$doy <- lubridate::yday(example_cT$Date)
+# day of year (base R)
+example_cT$doy <- as.numeric(format(example_cT$Date, "%j"))
 
 model_formulae <- list(null = ~ 1, 
                        Traffic = ~ traffic_volume, 

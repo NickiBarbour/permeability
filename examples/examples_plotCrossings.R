@@ -1,7 +1,6 @@
-require(permeability)
-require(ggplot2)
-require(ggspatial)
-require(mapview)
+library(permeability)
+library(ggplot2)
+library(ggspatial)
 
 data("example_id")
 data("example_permdata")
@@ -23,14 +22,6 @@ plotCrossings(permdata = sim_tracks)
 ## "real" data
 plotCrossings(permdata = example_permdata)
 
-# interactive map (mapview package) ------------------------------------
-crossing_map <- plotCrossings(permdata = example_permdata, 
-                              original.data = example_id,
-                              barrier.sf = hwy1_west,
-                              interactive.map = TRUE)
-
-crossing_map
-
 # static map (ggspatial and ggplot packages) --------------------------------
 
 ## just ggplot
@@ -41,7 +32,18 @@ crossing_map <- plotCrossings(permdata = example_permdata,
 
 crossing_map
 
-## with basemap
+\donttest{
+# interactive map (mapview package)
+if(requireNamespace("mapview", quietly = TRUE)){
+  crossing_map <- plotCrossings(permdata = example_permdata, 
+                                original.data = example_id,
+                                barrier.sf = hwy1_west,
+                                interactive.map = TRUE)
+  
+  crossing_map
+}
+
+## with basemap (requires internet)
 crossing_map <- plotCrossings(permdata = example_permdata, 
                               original.data = example_id,
                               barrier.sf = hwy1_west,
@@ -49,5 +51,4 @@ crossing_map <- plotCrossings(permdata = example_permdata,
                               add.basemap = TRUE)
 
 crossing_map
-
-
+}
